@@ -6,6 +6,8 @@
 <meta name="theme-color" content="#0A0B2E">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect fill='%238B3DD9' width='24' height='24' rx='4'/><text x='12' y='18' font-size='14' font-weight='bold' text-anchor='middle' fill='%234BF2F2'>D</text></svg>">
 <title>Duo Energy — Sofía × Ángel</title>
 
 <!-- Firebase SDK -->
@@ -636,6 +638,49 @@ body{
 .goal-banner .gb-icon{font-size:20px;flex-shrink:0}
 .goal-banner .gb-text strong{display:block;color:var(--text);font-size:13px;font-weight:700;margin-bottom:1px}
 [data-theme=light] .goal-banner{background:linear-gradient(135deg,rgba(58,55,166,0.07),rgba(80,72,200,0.04));border-color:rgba(58,55,166,0.18)}
+
+/* ===== CHAT ===== */
+.chat-container{display:flex;flex-direction:column;height:calc(100vh - 400px);max-height:600px;background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden}
+.chat-messages{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+.chat-messages::-webkit-scrollbar{width:6px}
+.chat-messages::-webkit-scrollbar-track{background:transparent}
+.chat-messages::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+.chat-msg{display:flex;gap:8px;align-items:flex-end;animation:slideIn 0.3s ease}
+@keyframes slideIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.chat-msg.from-sofia .chat-bubble{background:linear-gradient(135deg,rgba(139,61,217,0.25),rgba(75,242,242,0.12));border-color:rgba(139,61,217,0.35);color:var(--text)}
+.chat-msg.from-angel .chat-bubble{background:linear-gradient(135deg,rgba(75,242,242,0.25),rgba(139,61,217,0.12));border-color:rgba(75,242,242,0.35);color:var(--text)}
+.chat-bubble{padding:10px 14px;border-radius:16px;border:1px solid var(--border);font-size:13px;max-width:280px;word-wrap:break-word;line-height:1.4}
+.chat-time{font-size:10px;color:var(--faint);margin-top:2px}
+.chat-input-area{padding:14px;border-top:1px solid var(--border);display:flex;gap:8px;background:var(--surface2)}
+.chat-input{flex:1;background:var(--deep);border:1px solid var(--border);border-radius:20px;padding:10px 14px;color:var(--text);font-size:13px;outline:none;transition:border-color 0.2s}
+.chat-input:focus{border-color:var(--border2)}
+.chat-input::placeholder{color:var(--faint)}
+.chat-emoji-bar{display:flex;gap:4px;padding:0 14px 10px;flex-wrap:wrap}
+.chat-emoji-btn{width:36px;height:36px;border-radius:10px;background:var(--surface);border:1px solid var(--border);display:grid;place-items:center;font-size:18px;transition:all 0.15s;cursor:pointer}
+.chat-emoji-btn:hover{background:var(--surface2);border-color:var(--border2);transform:scale(1.05)}
+.chat-send{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--purple),var(--indigo));color:#fff;border:none;font-size:14px;display:grid;place-items:center;transition:all 0.2s;flex-shrink:0}
+.chat-send:hover{filter:brightness(1.1)}
+.chat-send:disabled{opacity:0.5;cursor:not-allowed}
+.chat-empty{text-align:center;padding:40px 20px;color:var(--faint);font-size:14px}
+
+/* ===== ACHIEVEMENTS ===== */
+.achievements-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px}
+.achievement-card{background:var(--surface);border:2px solid var(--border);border-radius:var(--r);padding:16px;text-align:center;transition:all 0.2s;position:relative;overflow:hidden}
+.achievement-card.unlocked{border-color:rgba(75,242,242,0.5);background:rgba(75,242,242,0.08);box-shadow:0 0 16px rgba(75,242,242,0.2)}
+.achievement-card::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 100% 0%,rgba(75,242,242,0.3),transparent 50%);opacity:0;transition:opacity 0.2s}
+.achievement-card.unlocked::before{opacity:1}
+.achievement-icon{font-size:40px;margin-bottom:8px}
+.achievement-name{font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px}
+.achievement-desc{font-size:10px;color:var(--faint);line-height:1.4}
+.achievement-card.locked{opacity:0.5}
+.achievement-card.locked .achievement-icon{filter:grayscale(100%)}
+
+/* ===== CELEBRATION CONFETTI ===== */
+@keyframes confetti-fall{0%{transform:translateY(-10px) rotateZ(0deg);opacity:1}100%{transform:translateY(100vh) rotateZ(360deg);opacity:0}}
+.confetti{position:fixed;width:10px;height:10px;background:var(--purple);border-radius:50%;pointer-events:none;animation:confetti-fall 2.5s ease-in;z-index:999}
+.celebration-overlay{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:998;pointer-events:none}
+.celebration-message{font-size:48px;font-weight:700;color:var(--text);text-align:center;text-shadow:0 4px 20px rgba(0,0,0,0.3);animation:bounce 0.8s cubic-bezier(0.68,-0.55,0.265,1.55)}
+@keyframes bounce{0%{transform:scale(0.3);opacity:0}50%{opacity:1}100%{transform:scale(1);opacity:0}}
 </style>
 </head>
 <body>
@@ -1904,6 +1949,84 @@ function Toast({
   }, msg);
 }
 
+/* ─── CHAT COMPONENT ─── */
+function ChatView({state, onSendMessage}) {
+  const [msgInput, setMsgInput] = useState('');
+  const [messages, setMessages] = useState(state.chatMessages || []);
+  const scrollRef = useRef(null);
+  const emojis = ['❤️', '🔥', '💪', '👏', '🎉', '😄', '💯', '⚡', '🏆', '😍'];
+
+  useEffect(() => {
+    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+  }, [messages]);
+
+  useEffect(() => {
+    setMessages(state.chatMessages || []);
+  }, [state.chatMessages]);
+
+  const send = (text) => {
+    if (!text.trim()) return;
+    const msg = {id: Date.now(), from: state.athlete === 'sofia' ? 'sofia' : state.athlete === 'angel' ? 'angel' : 'sofia', text: text.trim(), time: new Date().toLocaleTimeString('es-MX', {hour: '2-digit', minute: '2-digit'})};
+    const newMsgs = [...messages, msg];
+    setMessages(newMsgs);
+    onSendMessage(newMsgs);
+    setMsgInput('');
+  };
+
+  return React.createElement('div', {className: 'card'},
+    React.createElement('div', {className: 'chat-container'},
+      React.createElement('div', {className: 'chat-messages', ref: scrollRef},
+        messages.length === 0 ? React.createElement('div', {className: 'chat-empty'}, '👋 Aún no hay mensajes. ¡Envía uno!') :
+        messages.map(m => React.createElement('div', {key: m.id, className: `chat-msg from-${m.from}`},
+          React.createElement('div', {className: 'chat-bubble'}, m.text),
+          React.createElement('div', {className: 'chat-time'}, m.time)))),
+      React.createElement('div', {className: 'chat-emoji-bar'},
+        emojis.map(e => React.createElement('button', {key: e, className: 'chat-emoji-btn', onClick: () => send(e), title: 'Enviar emoji'}, e))),
+      React.createElement('div', {className: 'chat-input-area'},
+        React.createElement('input', {className: 'chat-input', type: 'text', placeholder: 'Escribe un mensaje...', value: msgInput, onChange: e => setMsgInput(e.target.value), onKeyDown: e => {if(e.key==='Enter') send(msgInput)}}),
+        React.createElement('button', {className: 'chat-send', onClick: () => send(msgInput), disabled: !msgInput.trim()}, '↑'))));
+}
+
+/* ─── ACHIEVEMENTS COMPONENT ─── */
+function AchievementsView({state}) {
+  const achievements = [
+    {id: 'week1', icon: '🏅', name: 'Primera semana', desc: 'Completaste 7 días', check: (s, a) => {const log = s.sessionLog?.[a] || {}; const dates = Object.keys(log).filter(d => log[d].completedAll).length; return dates >= 7;}},
+    {id: 'month1', icon: '🏆', name: 'Un mes', desc: 'Completaste 30 días', check: (s, a) => {const log = s.sessionLog?.[a] || {}; const dates = Object.keys(log).filter(d => log[d].completedAll).length; return dates >= 30;}},
+    {id: 'prs5', icon: '📈', name: '5 PRs', desc: 'Alcanzaste 5 PR nuevos', check: (s, a) => {const r = ROUTINES[a]; let prs = 0; r.forEach(d => {if(d.rest) return; d.exercises.forEach((ex, i) => {const k = `${a}_${d.day}_${i}`; const h = s.weights?.[k]?.history || []; if(h.length >= 2) {const start = h[0].weight, cur = h[h.length-1].weight; if(cur > start) prs++;}});}); return prs >= 5;}},
+    {id: 'streak30', icon: '🔥', name: 'Racha de 30', desc: '30 días seguidos', check: (s, a) => {const stats = calcStats(s, a); return stats.currentStreak >= 30;}},
+    {id: 'ex100', icon: '💪', name: '100 ejercicios', desc: 'Completaste 100 ejercicios', check: (s, a) => {const cnt = Object.values(s.doneEx || {}).filter(v => v).length; return cnt >= 100;}}
+  ];
+  const athletes = state.athlete === 'both' ? ['sofia', 'angel'] : [state.athlete];
+
+  return React.createElement(React.Fragment, null, athletes.map(athId => React.createElement('div', {key: athId, style: {marginBottom: 24}},
+    React.createElement('h3', {style: {marginBottom: 12, fontSize: 16, fontWeight: 700}}, ATHLETES[athId].name),
+    React.createElement('div', {className: 'achievements-grid'}, achievements.map(ach => {
+      const unlocked = ach.check(state, athId);
+      return React.createElement('div', {key: ach.id, className: `achievement-card${unlocked ? ' unlocked' : ' locked'}`},
+        React.createElement('div', {className: 'achievement-icon'}, ach.icon),
+        React.createElement('div', {className: 'achievement-name'}, ach.name),
+        React.createElement('div', {className: 'achievement-desc'}, ach.desc));
+    })))));
+}
+
+/* ─── CELEBRATION CONFETTI ─── */
+function CelebrationConfetti() {
+  useEffect(() => {
+    const container = document.body;
+    const colors = ['#8B3DD9', '#4BF2F2', '#3A37A6'];
+    for (let i = 0; i < 50; i++) {
+      const conf = document.createElement('div');
+      conf.className = 'confetti';
+      conf.style.left = Math.random() * 100 + '%';
+      conf.style.background = colors[Math.floor(Math.random() * colors.length)];
+      conf.style.delay = Math.random() * 0.3 + 's';
+      container.appendChild(conf);
+      setTimeout(() => conf.remove(), 2800);
+    }
+  }, []);
+  return null;
+}
+
 /* ─── MAIN APP ─── */
 function App() {
   const [showFbConfig, setShowFbConfig] = useState(false);
@@ -1913,6 +2036,7 @@ function App() {
   const [syncStatus, setSyncStatus] = useState('offline'); // offline | online | syncing
   const [firebaseReady, setFirebaseReady] = useState(false);
   const [toast, setToast] = useState(null);
+  const [celebration, setCelebration] = useState(null);
   const [state, setState] = useState(() => {
     const s = loadLocal();
     return {
@@ -1925,7 +2049,8 @@ function App() {
       bodyWeight: s.bodyWeight || {},
       theme: s.theme || 'dark',
       weights: s.weights || {},
-      sessionLog: s.sessionLog || {}
+      sessionLog: s.sessionLog || {},
+      chatMessages: s.chatMessages || {}
     };
   });
   const pendingRef = useRef(false);
@@ -1956,13 +2081,20 @@ function App() {
             notes: {...(remote.notes||{}), ...(s.notes||{})},
             bodyWeight: mergeBodyWeight(remote.bodyWeight||{}, s.bodyWeight||{}),
             weights: mergeWeights(remote.weights || {}, s.weights || {}),
-            sessionLog: mergeLog(remote.sessionLog || {}, s.sessionLog || {})
+            sessionLog: mergeLog(remote.sessionLog || {}, s.sessionLog || {}),
+            chatMessages: remote.chatMessages || s.chatMessages
           };
           saveLocal(merged);
           return merged;
         });
       }
       setSyncStatus('online');
+    });
+    // Listen to chat separately
+    fbOn('duo_chat', remote => {
+      if (remote) {
+        setState(s => ({...s, chatMessages: remote}));
+      }
     });
     return off;
   }
@@ -2097,6 +2229,16 @@ function App() {
         completedAll: done === total && total > 0
       };
       log[athId] = ath;
+      // Check if all exercises are completed to trigger celebration
+      if (done === total && total > 0 && !s.sessionLog?.[athId]?.[today]?.completedAll) {
+        const msgs = {
+          sofia: ['¡Eres increíble Sofía! 🔥', '¡Lo hiciste! 💪', '¡Perfecto! ✨', '¡Legendaria! 🏆'],
+          angel: ['¡Eres increíble Ángel! 🔥', '¡Lo hiciste! 💪', '¡Perfecto! ✨', '¡Leyenda! 🏆']
+        };
+        const msg = msgs[athId][Math.floor(Math.random() * msgs[athId].length)];
+        setCelebration(msg);
+        setTimeout(() => setCelebration(null), 2500);
+      }
       return {
         ...s,
         doneEx: next,
@@ -2136,6 +2278,10 @@ function App() {
       return {...s, bodyWeight: bw};
     });
   }, []);
+  const sendChatMessage = useCallback((messages) => {
+    setState(s => ({...s, chatMessages: messages}));
+    if (firebaseReady && db) fbSet('duo_chat', messages);
+  }, [firebaseReady]);
   const saveWeight = useCallback((key, weight) => {
     setState(s => {
       const w = {
@@ -2540,6 +2686,14 @@ function App() {
     icon: '💊',
     lbl: 'Suplementos'
   }, {
+    id: 'logros',
+    icon: '🏆',
+    lbl: 'Logros'
+  }, {
+    id: 'chat',
+    icon: '💬',
+    lbl: 'Chat'
+  }, {
     id: 'progreso',
     icon: '📊',
     lbl: 'Progreso'
@@ -2592,7 +2746,7 @@ function App() {
   }))) : /*#__PURE__*/React.createElement(CompareCol, {
     athId: state.athlete,
     section: "suplementos"
-  })), state.section === 'progreso' && /*#__PURE__*/React.createElement(React.Fragment, null, state.athlete === 'both' && /*#__PURE__*/React.createElement(ProgressCompare, {
+  })), state.section === 'logros' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(AchievementsView, {state: state})), state.section === 'chat' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(ChatView, {state: state, onSendMessage: sendChatMessage})), state.section === 'progreso' && /*#__PURE__*/React.createElement(React.Fragment, null, state.athlete === 'both' && /*#__PURE__*/React.createElement(ProgressCompare, {
     state: state
   }), state.athlete === 'both' ? /*#__PURE__*/React.createElement("div", {
     className: "compare"
@@ -2603,10 +2757,16 @@ function App() {
   }))) : /*#__PURE__*/React.createElement(CompareCol, {
     athId: state.athlete,
     section: "progreso"
-  })), /*#__PURE__*/React.createElement(Timer, null)));
+  })), celebration && /*#__PURE__*/React.createElement(CelebrationConfetti, null), celebration && /*#__PURE__*/React.createElement("div", {className: "celebration-overlay"}, /*#__PURE__*/React.createElement("div", {className: "celebration-message"}, celebration)), /*#__PURE__*/React.createElement(Timer, null)));
 }
 ReactDOM.createRoot(document.getElementById('root')).render(/*#__PURE__*/React.createElement(App, null));
 
+// Register Service Worker for PWA
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').then(reg => {
+    console.log('SW registered:', reg);
+  }).catch(err => console.log('SW registration failed:', err));
+}
 </script>
 </body>
 </html>
