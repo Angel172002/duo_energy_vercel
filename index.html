@@ -697,6 +697,33 @@ body{
 .diary-display{background:var(--deep);border:1px solid var(--border);border-radius:var(--r);padding:14px;font-size:13px;color:var(--text);line-height:1.6;white-space:pre-wrap;word-wrap:break-word}
 .diary-empty{text-align:center;padding:40px 20px;color:var(--faint);font-size:13px}
 
+/* ===== WEIGHT PROGRESSION ===== */
+.progression-card{background:linear-gradient(135deg,rgba(75,242,242,0.1),rgba(139,61,217,0.08));border:2px solid rgba(75,242,242,0.3);border-radius:var(--rl);padding:16px;margin-bottom:12px}
+.progression-header{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:12px}
+.progression-exercise{flex:1}
+.progression-name{font-size:14px;font-weight:700;color:var(--text)}
+.progression-day{font-size:11px;color:var(--faint);margin-top:2px}
+.progression-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;background:rgba(75,242,242,0.2);border:1px solid rgba(75,242,242,0.4);border-radius:16px;font-size:11px;font-weight:700;color:var(--cyan)}
+.progression-current{display:flex;align-items:center;gap:10px;padding:12px;background:var(--surface);border-radius:var(--r);margin-bottom:10px}
+.progression-current-val{font-family:var(--mono);font-size:18px;font-weight:700;color:var(--text)}
+.progression-arrow{font-size:16px;color:var(--cyan)}
+.progression-suggested{font-family:var(--mono);font-size:18px;font-weight:700;color:var(--cyan)}
+.progression-actions{display:flex;gap:8px}
+.progression-accept{padding:8px 16px;border-radius:var(--r);background:linear-gradient(135deg,var(--cyan),var(--purple));color:#fff;font-size:12px;font-weight:700;border:none;cursor:pointer;transition:all 0.2s}
+.progression-accept:hover{filter:brightness(1.1)}
+.progression-skip{padding:8px 16px;border-radius:var(--r);background:var(--surface2);border:1px solid var(--border);color:var(--dim);font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s}
+.progression-skip:hover{border-color:var(--border2);color:var(--text)}
+.progression-empty{text-align:center;padding:40px 20px;background:var(--surface);border-radius:var(--r);color:var(--faint);font-size:13px}
+
+/* ===== DUO PERFECT BADGE ===== */
+.duo-perfect-banner{display:flex;align-items:center;gap:12px;padding:14px 18px;background:linear-gradient(135deg,rgba(75,242,242,0.25),rgba(139,61,217,0.18));border:2px solid rgba(75,242,242,0.5);border-radius:var(--rl);margin-bottom:16px;animation:duoPulse 2s ease-in-out infinite}
+@keyframes duoPulse{0%,100%{border-color:rgba(75,242,242,0.5)}50%{border-color:rgba(75,242,242,0.8)}}
+.duo-perfect-icon{font-size:28px;animation:spin 3s linear infinite}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.duo-perfect-text{flex:1}
+.duo-perfect-title{font-size:14px;font-weight:700;color:var(--cyan);margin-bottom:2px}
+.duo-perfect-subtitle{font-size:12px;color:var(--dim)}
+
 /* ===== ACHIEVEMENTS ===== */
 .achievements-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px}
 .achievement-card{background:var(--surface);border:2px solid var(--border);border-radius:var(--r);padding:16px;text-align:center;transition:all 0.2s;position:relative;overflow:hidden}
@@ -1983,6 +2010,70 @@ function Toast({
   }, msg);
 }
 
+/* ─── WEIGHT PROGRESSION DETECTOR ─── */
+function getProgressionCandidates(state, athId) {
+  const today = new Date();
+  const candidates = [];
+  const routine = ROUTINES[athId];
+
+  routine.forEach(day => {
+    if (day.rest) return;
+    day.exercises.forEach((ex, i) => {
+      const key = `${athId}_${day.day}_${i}`;
+      const doneEx = state.doneEx || {};
+
+      // Check last 14 days
+      let consecutive = 0;
+      for (let d = 0; d < 14; d++) {
+        const date = new Date(today);
+        date.setDate(date.getDate() - d);
+        const dateStr = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+        const testKey = `${key}_${dateStr}`;
+        // Check if exercise was completed on this day
+        if (doneEx[key]) consecutive++;
+        else if (d < 14) break;
+      }
+
+      if (consecutive >= 14) {
+        const current = (state.weights?.[key]?.current) || parseWeight(ex.weight) || 0;
+        candidates.push({
+          key, name: ex.name, day: day.day, current, suggested: parseFloat((current + 2.5).toFixed(1))
+        });
+      }
+    });
+  });
+
+  return candidates;
+}
+
+/* ─── WEIGHT PROGRESSION COMPONENT ─── */
+function WeightProgressionView({state, onAcceptProgression}) {
+  const athletes = state.athlete === 'both' ? ['sofia', 'angel'] : [state.athlete];
+
+  return React.createElement('div', {style: {display: 'flex', flexDirection: 'column', gap: 20}},
+    athletes.map(athId => {
+      const candidates = getProgressionCandidates(state, athId);
+      const a = ATHLETES[athId];
+
+      return React.createElement('div', {key: athId},
+        React.createElement('h3', {style: {marginBottom: 12, fontSize: 15, fontWeight: 700}}, a.name),
+        candidates.length === 0 ? React.createElement('div', {className: 'progression-empty'}, '✅ Sigue entrenando para desbloquear progresiones') :
+        candidates.map(cand => React.createElement('div', {key: cand.key, className: 'progression-card'},
+          React.createElement('div', {className: 'progression-header'},
+            React.createElement('div', {className: 'progression-exercise'},
+              React.createElement('div', {className: 'progression-name'}, cand.name),
+              React.createElement('div', {className: 'progression-day'}, cand.day)),
+            React.createElement('div', {className: 'progression-badge'}, '📈 Listo para progresar')),
+          React.createElement('div', {className: 'progression-current'},
+            React.createElement('div', {className: 'progression-current-val'}, `${cand.current} kg`),
+            React.createElement('div', {className: 'progression-arrow'}, '→'),
+            React.createElement('div', {className: 'progression-suggested'}, `${cand.suggested} kg`)),
+          React.createElement('div', {className: 'progression-actions'},
+            React.createElement('button', {className: 'progression-accept', onClick: () => onAcceptProgression(cand.key, cand.suggested)}, 'Aceptar progresión'),
+            React.createElement('button', {className: 'progression-skip'}, 'Ahora no')))));
+    }));
+}
+
 /* ─── TRAINING DIARY COMPONENT ─── */
 function TrainingDiaryView({state, onDiarySave}) {
   const [draft, setDraft] = useState('');
@@ -2426,6 +2517,21 @@ function App() {
       return {...s, trainingDiary: diary};
     });
   }, []);
+  const acceptProgression = useCallback((exKey, newWeight) => {
+    setState(s => {
+      const w = {...(s.weights || {})};
+      const cur = w[exKey] || {current: null, history: []};
+      const hist = [...cur.history];
+      const today = todayISO();
+      const exists = hist.findIndex(e => e.date === today);
+      if (exists >= 0) hist[exists] = {date: today, weight: newWeight};
+      else hist.push({date: today, weight: newWeight});
+      hist.sort((a,b) => a.date.localeCompare(b.date));
+      w[exKey] = {current: newWeight, history: hist};
+      setToast(`✓ Progresión aceptada: ${newWeight} kg`);
+      return {...s, weights: w};
+    });
+  }, []);
   const saveWeight = useCallback((key, weight) => {
     setState(s => {
       const w = {
@@ -2834,6 +2940,10 @@ function App() {
     icon: '📝',
     lbl: 'Diario'
   }, {
+    id: 'progresion',
+    icon: '📈',
+    lbl: 'Progresión'
+  }, {
     id: 'hidratacion',
     icon: '💧',
     lbl: 'Hidratación'
@@ -2867,7 +2977,23 @@ function App() {
     }
   }, "Sigan as\xED.")), /*#__PURE__*/React.createElement("div", {
     className: "streak-num"
-  }, doneCount)), state.athlete === 'both' ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(DayStrip, {
+  }, doneCount)), state.athlete === 'both' && (() => {
+    const today = todayISO();
+    const sofiaDone = ROUTINES.sofia.find(d => d.day === state.activeDay)?.exercises.every((_, i) => state.doneEx?.[`sofia_${state.activeDay}_${i}`]);
+    const angelDone = ROUTINES.angel.find(d => d.day === state.activeDay)?.exercises.every((_, i) => state.doneEx?.[`angel_${state.activeDay}_${i}`]);
+    if (sofiaDone && angelDone) {
+      const log = state.sessionLog || {};
+      const sofia_month = Object.keys(log.sofia || {}).filter(d => d.startsWith(today.slice(0, 7)) && log.sofia[d].completedAll).length;
+      const angel_month = Object.keys(log.angel || {}).filter(d => d.startsWith(today.slice(0, 7)) && log.angel[d].completedAll).length;
+      const duo_perfect = Math.min(sofia_month, angel_month);
+      return React.createElement("div", {className: "duo-perfect-banner"},
+        React.createElement("div", {className: "duo-perfect-icon"}, "🔥"),
+        React.createElement("div", {className: "duo-perfect-text"},
+          React.createElement("div", {className: "duo-perfect-title"}, "🔥 Duo Perfect Desbloqueado"),
+          React.createElement("div", {className: "duo-perfect-subtitle"}, `¡Ambos completaron hoy! ${duo_perfect} Duo Perfect este mes`)));
+    }
+    return null;
+  })(), state.athlete === 'both' ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(DayStrip, {
     athId: "sofia"
   }), /*#__PURE__*/React.createElement("div", {
     className: "compare"
@@ -2898,7 +3024,7 @@ function App() {
   }))) : /*#__PURE__*/React.createElement(CompareCol, {
     athId: state.athlete,
     section: "suplementos"
-  })), state.section === 'diario' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(TrainingDiaryView, {state: state, onDiarySave: saveDiary})), state.section === 'hidratacion' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(HydrationView, {state: state, onHydrationUpdate: updateHydration})), state.section === 'logros' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(AchievementsView, {state: state})), state.section === 'chat' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(ChatView, {state: state, onSendMessage: sendChatMessage})), state.section === 'progreso' && /*#__PURE__*/React.createElement(React.Fragment, null, state.athlete === 'both' && /*#__PURE__*/React.createElement(ProgressCompare, {
+  })), state.section === 'diario' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(TrainingDiaryView, {state: state, onDiarySave: saveDiary})), state.section === 'progresion' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(WeightProgressionView, {state: state, onAcceptProgression: acceptProgression})), state.section === 'hidratacion' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(HydrationView, {state: state, onHydrationUpdate: updateHydration})), state.section === 'logros' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(AchievementsView, {state: state})), state.section === 'chat' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(ChatView, {state: state, onSendMessage: sendChatMessage})), state.section === 'progreso' && /*#__PURE__*/React.createElement(React.Fragment, null, state.athlete === 'both' && /*#__PURE__*/React.createElement(ProgressCompare, {
     state: state
   }), state.athlete === 'both' ? /*#__PURE__*/React.createElement("div", {
     className: "compare"
