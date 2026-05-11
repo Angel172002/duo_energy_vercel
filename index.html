@@ -202,6 +202,19 @@ body{
 .modal-btn-cancel{display:block;width:100%;padding:12px;border-radius:var(--r);background:var(--surface);border:1px solid var(--border);color:var(--dim);font-weight:600;font-size:14px;cursor:pointer;transition:all 0.2s}
 .modal-btn-cancel:hover{border-color:var(--border2);color:var(--text)}
 
+/* ===== SPLASH SCREEN ===== */
+.splash-screen{position:fixed;inset:0;background:linear-gradient(135deg,#0A0B2E 0%,#1a1b4d 100%);display:grid;place-items:center;z-index:2000;animation:splash-fade-out 0.6s ease-out 1.4s forwards}
+@keyframes splash-fade-out{0%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(0.95);pointer-events:none}}
+.splash-content{text-align:center;display:flex;flex-direction:column;align-items:center;gap:16px;animation:splash-pop 0.8s cubic-bezier(0.68,-0.55,0.265,1.55)}
+@keyframes splash-pop{0%{transform:scale(0.8);opacity:0}50%{transform:scale(1.05)}100%{transform:scale(1);opacity:1}}
+.splash-logo{width:120px;height:120px;background:linear-gradient(135deg,#8B3DD9,#4BF2F2);border-radius:30px;display:grid;place-items:center;font-size:56px;font-weight:900;color:#fff;box-shadow:0 30px 60px rgba(139,61,217,0.4),inset 0 1px 0 rgba(255,255,255,0.2);animation:splash-bounce 1s cubic-bezier(0.68,-0.55,0.265,1.55)}
+@keyframes splash-bounce{0%{transform:translateY(-20px);opacity:0}50%{transform:translateY(10px)}100%{transform:translateY(0);opacity:1}}
+.splash-title{font-size:36px;font-weight:900;color:#4BF2F2;margin:0;letter-spacing:-0.02em;text-shadow:0 4px 12px rgba(75,242,242,0.3)}
+.splash-subtitle{font-size:14px;color:rgba(255,255,255,0.6);letter-spacing:0.15em;text-transform:uppercase;font-weight:600}
+.splash-loader{width:40px;height:4px;background:rgba(255,255,255,0.2);border-radius:2px;margin-top:20px;position:relative;overflow:hidden}
+.splash-loader::after{content:'';position:absolute;left:0;top:0;height:100%;width:30%;background:linear-gradient(90deg,#4BF2F2,#8B3DD9);border-radius:2px;animation:splash-load 1s ease-in-out infinite}
+@keyframes splash-load{0%{left:0}50%{left:70%}100%{left:0}}
+
 /* ===== ATHLETE SWITCHER ===== */
 .athlete-switch{display:flex;background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:5px;gap:4px;backdrop-filter:blur(12px);margin-bottom:22px}
 .athlete-tab{flex:1;padding:13px 16px;border-radius:14px;display:flex;align-items:center;justify-content:center;gap:9px;font-weight:600;font-size:14px;color:var(--dim);transition:all 0.25s cubic-bezier(0.4,0,0.2,1);position:relative}
@@ -1714,6 +1727,20 @@ function BodyWeightCard({athId, state, saveBodyWeight}){
     ) : React.createElement("div",{className:"bw-empty"}, history.length===1 ? "Registra al menos otro peso para ver tu evolución 📈" : "Sin datos aún. Registra tu primer peso arriba ⬆️")
   );
 }
+function SplashScreen({onFinish}) {
+  React.useEffect(() => {
+    const timer = setTimeout(onFinish, 2000);
+    return () => clearTimeout(timer);
+  }, [onFinish]);
+  return React.createElement("div", {className: "splash-screen"},
+    React.createElement("div", {className: "splash-content"},
+      React.createElement("div", {className: "splash-logo"}, "D"),
+      React.createElement("h1", {className: "splash-title"}, "Duo Energy"),
+      React.createElement("div", {className: "splash-subtitle"}, "Sofía × Ángel"),
+      React.createElement("div", {className: "splash-loader"})
+    )
+  );
+}
 function AvatarModal({athId, onClose, onSave}) {
   const handleFileChange = (e) => {
     const file = e.target.files?.[0];
@@ -2617,6 +2644,7 @@ function App() {
   const [celebration, setCelebration] = useState(null);
   const [showAvatarModal, setShowAvatarModal] = useState(false);
   const [selectedAthleteForAvatar, setSelectedAthleteForAvatar] = useState(null);
+  const [showSplash, setShowSplash] = useState(true);
   const [state, setState] = useState(() => {
     const s = loadLocal();
     return {
@@ -3222,7 +3250,7 @@ function App() {
         autoTimer.remaining<=0?"¡Descanso terminado!":"Descansando"),
       React.createElement("div",{className:"auto-timer-name"},autoTimer.name)),
     React.createElement("button",{className:"auto-timer-close",onClick:()=>setAutoTimer(null)},"✕")
-  ), showBackup && React.createElement("div",{className:"backup-menu-overlay",onClick:e=>{if(e.target.classList.contains('backup-menu-overlay')) setShowBackup(false);}},
+  ), showSplash && React.createElement(SplashScreen, {onFinish: () => setShowSplash(false)}), showBackup && React.createElement("div",{className:"backup-menu-overlay",onClick:e=>{if(e.target.classList.contains('backup-menu-overlay')) setShowBackup(false);}},
     React.createElement("div",{className:"backup-menu"},
       React.createElement("h3",null,"⚙️ Datos y configuración"),
       React.createElement("div",{className:"backup-actions"},
