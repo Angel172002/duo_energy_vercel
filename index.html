@@ -872,6 +872,125 @@ body{
 .celebration-overlay{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:998;pointer-events:none}
 .celebration-message{font-size:48px;font-weight:700;color:var(--text);text-align:center;text-shadow:0 4px 20px rgba(0,0,0,0.3);animation:bounce 0.8s cubic-bezier(0.68,-0.55,0.265,1.55)}
 @keyframes bounce{0%{transform:scale(0.3);opacity:0}50%{opacity:1}100%{transform:scale(1);opacity:0}}
+
+/* ===== BOTTOM NAV (móvil) ===== */
+.bottom-nav{display:none}
+@media(max-width:700px){
+  .section-tabs{display:none !important}
+  .bottom-nav{display:grid;position:fixed;bottom:0;left:0;right:0;grid-template-columns:repeat(5,1fr);background:rgba(10,11,46,0.95);border-top:1px solid var(--border);backdrop-filter:blur(20px);z-index:200;padding:6px 4px calc(6px + env(safe-area-inset-bottom)) 4px}
+  [data-theme=light] .bottom-nav{background:rgba(255,255,255,0.95)}
+  .bottom-nav-btn{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;border:none;background:transparent;color:var(--faint);font-size:10px;font-weight:600;cursor:pointer;border-radius:10px;transition:all 0.2s}
+  .bottom-nav-btn.active{color:var(--cyan)}
+  [data-theme=light] .bottom-nav-btn.active{color:var(--purple)}
+  .bottom-nav-icon{font-size:20px;line-height:1}
+  .bottom-nav-badge{position:absolute;top:3px;right:24%;width:8px;height:8px;border-radius:50%;background:#ff4b4b;border:1.5px solid var(--deep)}
+  body{padding-bottom:78px}
+}
+
+/* ===== MORE SHEET ===== */
+.sheet-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:250;animation:fadeIn 0.2s}
+.sheet{position:fixed;left:0;right:0;bottom:0;background:var(--deep);border-top-left-radius:24px;border-top-right-radius:24px;padding:18px 16px calc(24px + env(safe-area-inset-bottom)) 16px;z-index:260;max-height:78vh;overflow-y:auto;animation:sheetUp 0.3s cubic-bezier(0.4,0,0.2,1);border:1px solid var(--border);border-bottom:none}
+.sheet-handle{width:42px;height:4px;background:var(--border2);border-radius:2px;margin:0 auto 14px auto}
+.sheet-title{font-size:12px;font-weight:700;color:var(--faint);margin-bottom:12px;text-transform:uppercase;letter-spacing:1px}
+.sheet-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.sheet-item{display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 8px;background:var(--surface);border:1px solid var(--border);border-radius:14px;color:var(--text);cursor:pointer;font-size:11px;font-weight:600;transition:all 0.2s}
+.sheet-item:active{transform:scale(0.96)}
+.sheet-item.active{border-color:var(--cyan);color:var(--cyan);background:rgba(75,242,242,0.08)}
+[data-theme=light] .sheet-item.active{border-color:var(--purple);color:var(--purple);background:rgba(139,61,217,0.06)}
+.sheet-icon{font-size:24px}
+@keyframes sheetUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+
+/* ===== STICKY DAY PROGRESS ===== */
+.sticky-progress{position:sticky;top:8px;z-index:50;background:rgba(10,11,46,0.92);backdrop-filter:blur(16px);padding:10px 14px;border-radius:14px;border:1px solid var(--border);margin-bottom:12px;display:flex;align-items:center;gap:12px;box-shadow:0 4px 14px rgba(0,0,0,0.25)}
+[data-theme=light] .sticky-progress{background:rgba(255,255,255,0.94)}
+.sticky-progress-info{flex:1;min-width:0}
+.sticky-progress-text{font-size:12px;color:var(--dim);font-weight:600;margin-bottom:5px;display:flex;justify-content:space-between;gap:6px}
+.sticky-progress-text strong{color:var(--text)}
+.sticky-progress-bar{height:5px;background:var(--surface2);border-radius:3px;overflow:hidden}
+.sticky-progress-fill{height:100%;background:linear-gradient(90deg,var(--purple),var(--cyan));transition:width 0.5s cubic-bezier(0.4,0,0.2,1);border-radius:3px}
+.sticky-progress-pct{font-family:var(--mono);font-size:15px;font-weight:700;color:var(--cyan);min-width:42px;text-align:right}
+[data-theme=light] .sticky-progress-pct{color:var(--purple)}
+
+/* ===== PR BANNER ===== */
+.pr-banner-overlay{position:fixed;inset:0;display:grid;place-items:center;z-index:400;background:rgba(0,0,0,0.75);backdrop-filter:blur(10px);animation:fadeIn 0.25s}
+.pr-banner{background:linear-gradient(135deg,#FFD700,#FFA500,#FF6B6B);padding:36px 44px;border-radius:24px;text-align:center;box-shadow:0 24px 80px rgba(255,180,0,0.55),inset 0 2px 0 rgba(255,255,255,0.3);animation:prPop 0.6s cubic-bezier(0.34,1.56,0.64,1);max-width:90vw}
+.pr-banner-trophy{font-size:64px;margin-bottom:6px;animation:trophyShake 0.6s ease-out;line-height:1}
+.pr-banner-title{font-size:30px;font-weight:900;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,0.4);letter-spacing:2px}
+.pr-banner-sub{font-size:16px;color:#fff;font-weight:700;margin-top:6px;opacity:0.95}
+.pr-banner-delta{font-size:20px;color:#fff;font-weight:800;margin-top:14px;background:rgba(255,255,255,0.22);padding:8px 22px;border-radius:30px;display:inline-block}
+@keyframes prPop{0%{transform:scale(0.3) rotate(-10deg);opacity:0}50%{transform:scale(1.1) rotate(3deg)}100%{transform:scale(1) rotate(0);opacity:1}}
+@keyframes trophyShake{0%,100%{transform:scale(1) rotate(0)}25%{transform:scale(1.1) rotate(-8deg)}75%{transform:scale(1.1) rotate(8deg)}}
+
+/* ===== LIVE PARTNER STATUS ===== */
+.live-banner{display:flex;align-items:center;gap:10px;padding:11px 16px;background:linear-gradient(135deg,rgba(75,242,242,0.18),rgba(139,61,217,0.12));border:1px solid rgba(75,242,242,0.4);border-radius:14px;margin-bottom:14px;animation:livePulse 2.5s ease-in-out infinite}
+.live-dot{width:10px;height:10px;border-radius:50%;background:#4BF2F2;box-shadow:0 0 12px #4BF2F2;animation:liveDot 1.5s ease-in-out infinite}
+.live-text{flex:1;font-size:13px;color:var(--text);font-weight:600;line-height:1.3}
+.live-text-sub{font-size:11px;color:var(--dim);margin-top:2px;font-weight:500}
+@keyframes livePulse{0%,100%{box-shadow:0 0 0 0 rgba(75,242,242,0.4)}50%{box-shadow:0 0 0 8px rgba(75,242,242,0)}}
+@keyframes liveDot{0%,100%{opacity:1}50%{opacity:0.4}}
+
+/* ===== HEATMAP LEGEND ===== */
+.heatmap-legend{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--faint);margin-top:10px;justify-content:flex-end;font-weight:600}
+.heatmap-legend-scale{display:flex;gap:3px}
+.heatmap-legend-cell{width:11px;height:11px;border-radius:2px;background:var(--surface2);border:1px solid var(--border)}
+.heatmap-legend-cell.l1{background:rgba(75,242,242,0.3);border-color:rgba(75,242,242,0.2)}
+.heatmap-legend-cell.l2{background:rgba(75,242,242,0.55);border-color:rgba(75,242,242,0.4)}
+.heatmap-legend-cell.l3{background:rgba(75,242,242,0.85);border-color:rgba(75,242,242,0.6)}
+
+/* ===== BODY MEASURES ===== */
+.measures-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:18px;backdrop-filter:blur(12px);margin-bottom:14px}
+.measures-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:14px}
+.measure-field{display:flex;flex-direction:column;gap:5px}
+.measure-label{font-size:11px;color:var(--faint);font-weight:600;text-transform:uppercase;letter-spacing:0.5px}
+.measure-input-row{display:flex;align-items:center;gap:8px;background:var(--deep);border:1px solid var(--border);border-radius:12px;padding:8px 12px}
+.measure-input-row input{background:transparent;border:none;color:var(--text);font-family:var(--mono);font-size:15px;font-weight:700;width:100%;outline:none}
+.measure-unit{color:var(--faint);font-size:12px;font-weight:600}
+.measure-delta{font-size:10px;color:var(--cyan);font-weight:700;margin-top:3px}
+.measure-delta.dn{color:#ff8b8b}
+.measure-save-btn{margin-top:12px;width:100%;padding:11px;border:none;background:linear-gradient(135deg,var(--purple),var(--cyan));color:#fff;font-weight:700;border-radius:12px;cursor:pointer;font-size:13px}
+
+/* ===== CICLO MENSTRUAL ===== */
+.cycle-card{background:linear-gradient(135deg,rgba(255,107,160,0.08),rgba(139,61,217,0.06));border:1px solid rgba(255,107,160,0.25);border-radius:var(--rl);padding:18px;margin-bottom:14px;overflow:hidden}
+.cycle-header{display:flex;align-items:center;gap:14px;margin-bottom:12px}
+.cycle-day-circle{width:70px;height:70px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 35% 30%,rgba(255,107,160,0.35),rgba(139,61,217,0.18));border:2px solid rgba(255,107,160,0.4);font-family:var(--mono);font-size:22px;font-weight:800;color:#ff7ba6;flex-shrink:0}
+.cycle-info{flex:1;min-width:0}
+.cycle-title{font-size:15px;font-weight:700;color:var(--text)}
+.cycle-phase{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:14px;font-size:11.5px;font-weight:700;margin-top:6px}
+.cycle-phase.menstrual{background:rgba(255,107,160,0.2);color:#ff7ba6}
+.cycle-phase.follicular{background:rgba(75,242,242,0.18);color:#4BF2F2}
+.cycle-phase.ovulation{background:rgba(255,217,75,0.2);color:#ffd94b}
+.cycle-phase.luteal{background:rgba(139,61,217,0.2);color:#b88ffc}
+.cycle-recommendation{margin-top:14px;padding:12px;background:var(--deep);border-radius:12px;font-size:12.5px;color:var(--dim);line-height:1.5}
+.cycle-start-btn{margin-top:10px;width:100%;padding:10px;border:1px solid rgba(255,107,160,0.4);background:rgba(255,107,160,0.1);color:#ff7ba6;border-radius:10px;cursor:pointer;font-weight:600;font-size:12px}
+
+/* ===== ENERGY/SLEEP RATING ===== */
+.rating-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:16px;margin-bottom:14px}
+.rating-row{display:flex;align-items:center;gap:10px;margin:8px 0}
+.rating-label{font-size:12px;color:var(--dim);font-weight:600;min-width:80px}
+.rating-stars{display:flex;gap:6px}
+.rating-star{width:32px;height:32px;border-radius:50%;background:var(--surface2);border:1px solid var(--border);display:grid;place-items:center;font-size:15px;cursor:pointer;transition:all 0.2s}
+.rating-star.filled{background:linear-gradient(135deg,#FFD700,#FFA500);border-color:#FFD700;transform:scale(1.06)}
+
+/* ===== WEEKLY RECAP ===== */
+.recap-card{background:linear-gradient(135deg,rgba(75,242,242,0.1),rgba(139,61,217,0.08));border:1px solid rgba(75,242,242,0.3);border-radius:var(--rl);padding:18px;margin-bottom:14px}
+.recap-title{font-size:14px;font-weight:700;color:var(--cyan);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.recap-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.recap-stat{padding:12px;background:var(--deep);border-radius:12px;text-align:center}
+.recap-stat-val{font-size:22px;font-weight:800;color:var(--text);font-family:var(--mono);line-height:1.2}
+.recap-stat-lbl{font-size:11px;color:var(--faint);margin-top:3px;text-transform:uppercase;letter-spacing:0.5px}
+.recap-stat-delta{font-size:11px;color:var(--cyan);font-weight:700;margin-top:3px}
+.recap-stat-delta.dn{color:#ff8b8b}
+
+/* ===== COUPLE CHALLENGES ===== */
+.challenge-card{background:linear-gradient(135deg,rgba(139,61,217,0.12),rgba(255,107,160,0.08));border:1px solid rgba(139,61,217,0.35);border-radius:var(--rl);padding:18px;margin-bottom:14px}
+.challenge-title{font-size:14px;font-weight:700;color:var(--text);margin-bottom:6px}
+.challenge-sub{font-size:12px;color:var(--dim);margin-bottom:12px}
+.challenge-progress{display:flex;align-items:center;gap:12px;margin-top:12px}
+.challenge-bar{flex:1;height:8px;background:var(--surface2);border-radius:4px;overflow:hidden}
+.challenge-bar-fill{height:100%;background:linear-gradient(90deg,var(--purple),#ff7ba6);transition:width 0.4s}
+.challenge-pct{font-family:var(--mono);font-weight:700;color:var(--text);font-size:13px;min-width:42px;text-align:right}
+.challenge-completed{margin-top:10px;padding:10px;background:rgba(75,242,242,0.1);border:1px solid rgba(75,242,242,0.3);border-radius:10px;font-size:12px;color:var(--cyan);font-weight:700;text-align:center}
+
 </style>
 </head>
 <body>
@@ -1645,7 +1764,15 @@ function HeatMap({
       className: `hm-cell${cell.out ? ' out' : ''}${iso === todayStr ? ' today' : ''} h${lvl}`,
       title: `${iso} · ${exCnt} ej`
     }, /*#__PURE__*/React.createElement("span", null, cell.date.getDate()));
-  })));
+  })),
+  React.createElement("div", {className:"heatmap-legend"},
+    React.createElement("span", null, "Menos"),
+    React.createElement("div", {className:"heatmap-legend-scale"},
+      React.createElement("div", {className:"heatmap-legend-cell"}),
+      React.createElement("div", {className:"heatmap-legend-cell l1"}),
+      React.createElement("div", {className:"heatmap-legend-cell l2"}),
+      React.createElement("div", {className:"heatmap-legend-cell l3"})),
+    React.createElement("span", null, "Más")));
 }
 /* ─── BodyWeightCard ─── */
 function BodyWeightCard({athId, state, saveBodyWeight}){
@@ -2582,6 +2709,206 @@ function HydrationView({state, onHydrationUpdate}) {
     }));
 }
 
+/* ─── BODY MEASURES COMPONENT ─── */
+function BodyMeasuresView({state, onMeasureSave}) {
+  const today = todayISO();
+  const athletes = state.athlete === 'both' ? ['sofia', 'angel'] : [state.athlete];
+  const fields = [
+    {k:'chest', lbl:'Pecho'}, {k:'waist', lbl:'Cintura'},
+    {k:'hip', lbl:'Cadera'}, {k:'biceps', lbl:'Bíceps'},
+    {k:'thigh', lbl:'Muslo'}, {k:'neck', lbl:'Cuello'}
+  ];
+  const [drafts, setDrafts] = useState({});
+  const getValue = (athId, k) => drafts[`${athId}_${k}`] !== undefined ? drafts[`${athId}_${k}`] : '';
+  const measures = state.bodyMeasures || {};
+  const getLast = (athId, k) => {
+    const list = measures[athId] || [];
+    if (!list.length) return null;
+    return list[list.length - 1]?.[k] || null;
+  };
+  const getPrev = (athId, k) => {
+    const list = measures[athId] || [];
+    if (list.length < 2) return null;
+    return list[list.length - 2]?.[k] || null;
+  };
+  const handleSave = (athId) => {
+    const payload = {};
+    fields.forEach(f => {
+      const v = parseFloat(drafts[`${athId}_${f.k}`]);
+      if (!isNaN(v)) payload[f.k] = v;
+    });
+    if (Object.keys(payload).length > 0) {
+      onMeasureSave(athId, {...payload, date: today});
+      const newD = {...drafts};
+      fields.forEach(f => delete newD[`${athId}_${f.k}`]);
+      setDrafts(newD);
+    }
+  };
+  return React.createElement('div', null, athletes.map(athId => {
+    const a = ATHLETES[athId];
+    return React.createElement('div', {key: athId, className: 'measures-card'},
+      React.createElement('h3', {style:{margin:0, fontSize:15, fontWeight:700}}, `📏 Medidas · ${a.name}`),
+      React.createElement('div', {style:{fontSize:11, color:'var(--faint)', marginTop:4}}, 'Toma medidas en cm. Recomendado: mensual.'),
+      React.createElement('div', {className:'measures-grid'},
+        fields.map(f => {
+          const last = getLast(athId, f.k);
+          const prev = getPrev(athId, f.k);
+          const delta = (last != null && prev != null) ? (last - prev) : null;
+          return React.createElement('div', {key: f.k, className:'measure-field'},
+            React.createElement('label', {className:'measure-label'}, f.lbl),
+            React.createElement('div', {className:'measure-input-row'},
+              React.createElement('input', {
+                type:'number', step:'0.5', min:'0',
+                placeholder: last != null ? String(last) : '—',
+                value: getValue(athId, f.k),
+                onChange: e => setDrafts({...drafts, [`${athId}_${f.k}`]: e.target.value})
+              }),
+              React.createElement('span', {className:'measure-unit'}, 'cm')),
+            delta != null && React.createElement('div', {className:`measure-delta${delta < 0 ? ' dn' : ''}`},
+              `${delta > 0 ? '+' : ''}${delta.toFixed(1)} vs anterior`));
+        })),
+      React.createElement('button', {className:'measure-save-btn', onClick: () => handleSave(athId)},
+        '💾 Guardar medidas de hoy'));
+  }));
+}
+
+/* ─── CYCLE TRACKER (Sofía) ─── */
+function CycleView({state, onCycleStart}) {
+  const cycle = state.cycle || {};
+  const lastPeriod = cycle.lastPeriodStart;
+  const today = new Date();
+  const recommendations = {
+    menstrual: {label:'Menstruación (días 1-5)', icon:'🩸', tip:'Baja intensidad. Caminatas y estiramientos suaves. Escucha tu cuerpo, no hay obligación.'},
+    follicular: {label:'Folicular (días 6-13)', icon:'⚡', tip:'¡Ventana de oro! Energía alta, fuerza máxima. Sube cargas, intenta PRs.'},
+    ovulation: {label:'Ovulación (días 14-16)', icon:'✨', tip:'Pico de fuerza absoluta. Día perfecto para test de 1RM o récords.'},
+    luteal: {label:'Lútea (días 17-28)', icon:'🌙', tip:'Energía baja. Volumen moderado, evita HIIT. Hidrátate más, descansa bien.'}
+  };
+  let phase = null, dayInCycle = null;
+  if (lastPeriod) {
+    const last = new Date(lastPeriod);
+    dayInCycle = Math.floor((today - last) / 86400000) + 1;
+    if (dayInCycle <= 5) phase = 'menstrual';
+    else if (dayInCycle <= 13) phase = 'follicular';
+    else if (dayInCycle <= 16) phase = 'ovulation';
+    else if (dayInCycle <= 28) phase = 'luteal';
+    else { dayInCycle = ((dayInCycle - 1) % 28) + 1; phase = dayInCycle <= 5 ? 'menstrual' : dayInCycle <= 13 ? 'follicular' : dayInCycle <= 16 ? 'ovulation' : 'luteal'; }
+  }
+  return React.createElement('div', null,
+    React.createElement('div', {className:'cycle-card'},
+      lastPeriod ? React.createElement(React.Fragment, null,
+        React.createElement('div', {className:'cycle-header'},
+          React.createElement('div', {className:'cycle-day-circle'}, `D${dayInCycle}`),
+          React.createElement('div', {className:'cycle-info'},
+            React.createElement('div', {className:'cycle-title'}, '🌸 Ciclo menstrual'),
+            React.createElement('div', {className:`cycle-phase ${phase}`},
+              recommendations[phase].icon, ' ', recommendations[phase].label))),
+        React.createElement('div', {className:'cycle-recommendation'},
+          React.createElement('strong', null, '💡 Recomendación para hoy: '),
+          recommendations[phase].tip),
+        React.createElement('button', {className:'cycle-start-btn', onClick: onCycleStart},
+          '🩸 Empezó nuevo período hoy')
+      ) : React.createElement(React.Fragment, null,
+        React.createElement('div', {style:{fontSize:15, fontWeight:700, marginBottom:6}}, '🌸 Tracker de ciclo menstrual'),
+        React.createElement('div', {style:{fontSize:12.5, color:'var(--dim)', lineHeight:1.5, marginBottom:14}},
+          'Registra el inicio de tu período para recibir recomendaciones de entreno personalizadas según tu fase hormonal.'),
+        React.createElement('button', {className:'cycle-start-btn', onClick: onCycleStart},
+          '🩸 Empezó mi período hoy'))));
+}
+
+/* ─── ENERGY/SLEEP RATING (pre-entreno) ─── */
+function EnergyRating({state, onRatingSave}) {
+  const today = todayISO();
+  const athletes = state.athlete === 'both' ? ['sofia', 'angel'] : [state.athlete];
+  const ratings = state.dailyRatings || {};
+  const setRating = (athId, type, val) => {
+    onRatingSave(athId, type, val);
+  };
+  return React.createElement('div', null, athletes.map(athId => {
+    const todayR = ratings[athId]?.[today] || {};
+    return React.createElement('div', {key: athId, className:'rating-card'},
+      React.createElement('div', {style:{fontSize:13, fontWeight:700, marginBottom:8}}, `${ATHLETES[athId].name} · ¿Cómo te sientes hoy?`),
+      [{k:'sleep', lbl:'😴 Sueño', icon:'⭐'}, {k:'energy', lbl:'⚡ Energía', icon:'⭐'}, {k:'mood', lbl:'😊 Ánimo', icon:'⭐'}].map(t =>
+        React.createElement('div', {key:t.k, className:'rating-row'},
+          React.createElement('div', {className:'rating-label'}, t.lbl),
+          React.createElement('div', {className:'rating-stars'},
+            [1,2,3,4,5].map(n => React.createElement('button', {
+              key: n,
+              className: `rating-star${(todayR[t.k] || 0) >= n ? ' filled' : ''}`,
+              onClick: () => setRating(athId, t.k, n)
+            }, n <= (todayR[t.k] || 0) ? '⭐' : '☆'))))));
+  }));
+}
+
+/* ─── WEEKLY RECAP ─── */
+function WeeklyRecap({state}) {
+  const athletes = state.athlete === 'both' ? ['sofia', 'angel'] : [state.athlete];
+  return React.createElement('div', null, athletes.map(athId => {
+    const log = state.sessionLog?.[athId] || {};
+    const today = new Date();
+    const thisWeek = [], lastWeek = [];
+    for (let i = 0; i < 14; i++) {
+      const d = new Date(today); d.setDate(d.getDate() - i);
+      const iso = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+      if (i < 7) thisWeek.push(iso); else lastWeek.push(iso);
+    }
+    const daysThis = thisWeek.filter(d => log[d]?.completedAll).length;
+    const daysLast = lastWeek.filter(d => log[d]?.completedAll).length;
+    const exThis = thisWeek.reduce((acc, d) => acc + (log[d]?.exercises || 0), 0);
+    const exLast = lastWeek.reduce((acc, d) => acc + (log[d]?.exercises || 0), 0);
+    let tonnage = 0;
+    const w = state.weights || {};
+    Object.keys(w).filter(k => k.startsWith(athId+'_')).forEach(k => {
+      const h = w[k].history || [];
+      h.filter(e => thisWeek.includes(e.date)).forEach(e => {
+        tonnage += (e.weight || 0) * 3 * 10;
+      });
+    });
+    const delta = daysThis - daysLast;
+    return React.createElement('div', {key: athId, className:'recap-card'},
+      React.createElement('div', {className:'recap-title'}, `📊 Resumen semanal · ${ATHLETES[athId].name}`),
+      React.createElement('div', {className:'recap-grid'},
+        React.createElement('div', {className:'recap-stat'},
+          React.createElement('div', {className:'recap-stat-val'}, daysThis),
+          React.createElement('div', {className:'recap-stat-lbl'}, 'Días entrenados'),
+          delta !== 0 && React.createElement('div', {className:`recap-stat-delta${delta < 0 ? ' dn' : ''}`}, `${delta > 0 ? '+' : ''}${delta} vs sem. ant.`)),
+        React.createElement('div', {className:'recap-stat'},
+          React.createElement('div', {className:'recap-stat-val'}, exThis),
+          React.createElement('div', {className:'recap-stat-lbl'}, 'Ejercicios'),
+          exLast > 0 && React.createElement('div', {className:`recap-stat-delta${exThis < exLast ? ' dn' : ''}`}, `${exThis - exLast >= 0 ? '+' : ''}${exThis - exLast}`)),
+        React.createElement('div', {className:'recap-stat'},
+          React.createElement('div', {className:'recap-stat-val'}, `${Math.round(tonnage)}`),
+          React.createElement('div', {className:'recap-stat-lbl'}, 'Tonelaje kg')),
+        React.createElement('div', {className:'recap-stat'},
+          React.createElement('div', {className:'recap-stat-val'}, `${Math.round((daysThis/7)*100)}%`),
+          React.createElement('div', {className:'recap-stat-lbl'}, 'Asistencia'))));
+  }));
+}
+
+/* ─── COUPLE CHALLENGE ─── */
+function CoupleChallenge({state}) {
+  const today = new Date();
+  const startOfWeek = new Date(today);
+  startOfWeek.setDate(today.getDate() - ((today.getDay() + 6) % 7));
+  const weekDays = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(startOfWeek); d.setDate(startOfWeek.getDate() + i);
+    weekDays.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`);
+  }
+  const sofiaLog = state.sessionLog?.sofia || {};
+  const angelLog = state.sessionLog?.angel || {};
+  const duoDays = weekDays.filter(d => sofiaLog[d]?.completedAll && angelLog[d]?.completedAll).length;
+  const target = 5;
+  const pct = Math.min(100, Math.round((duoDays / target) * 100));
+  return React.createElement('div', {className:'challenge-card'},
+    React.createElement('div', {className:'challenge-title'}, '🎯 Reto semanal de pareja'),
+    React.createElement('div', {className:'challenge-sub'}, `Completen ambos ${target} días esta semana para desbloquear el badge "Duo Master"`),
+    React.createElement('div', {className:'challenge-progress'},
+      React.createElement('div', {className:'challenge-bar'},
+        React.createElement('div', {className:'challenge-bar-fill', style:{width:`${pct}%`}})),
+      React.createElement('div', {className:'challenge-pct'}, `${duoDays}/${target}`)),
+    duoDays >= target && React.createElement('div', {className:'challenge-completed'}, '🏆 ¡Reto completado! Duo Master desbloqueado'));
+}
+
 /* ─── CHAT COMPONENT ─── */
 function ChatView({state, onSendMessage}) {
   const normalizeMsgs = (raw) => {
@@ -2647,6 +2974,128 @@ function AchievementsView({state}) {
     })))));
 }
 
+/* ─── BOTTOM NAV ─── */
+function BottomNav({active, onChange, onOpenMore, hasUnread}) {
+  const items = [
+    {id:'rutina', icon:'🏋️', lbl:'Hoy'},
+    {id:'progreso', icon:'📊', lbl:'Progreso'},
+    {id:'chat', icon:'💬', lbl:'Chat', badge: hasUnread},
+    {id:'logros', icon:'🏆', lbl:'Logros'}
+  ];
+  return React.createElement('nav', {className:'bottom-nav'},
+    items.map(it => React.createElement('button', {
+      key: it.id,
+      className: `bottom-nav-btn${active === it.id ? ' active' : ''}`,
+      onClick: () => onChange(it.id)
+    },
+      React.createElement('span', {className:'bottom-nav-icon'}, it.icon),
+      React.createElement('span', null, it.lbl),
+      it.badge && React.createElement('span', {className:'bottom-nav-badge'}))),
+    React.createElement('button', {
+      className: `bottom-nav-btn${['nutricion','suplementos','diario','progresion','historial','cardio','hidratacion','medidas','ciclo'].includes(active) ? ' active' : ''}`,
+      onClick: onOpenMore
+    },
+      React.createElement('span', {className:'bottom-nav-icon'}, '⋯'),
+      React.createElement('span', null, 'Más')));
+}
+
+/* ─── MORE SHEET ─── */
+function MoreSheet({active, onChange, onClose}) {
+  const items = [
+    {id:'nutricion', icon:'🥗', lbl:'Nutrición'},
+    {id:'suplementos', icon:'💊', lbl:'Suplementos'},
+    {id:'hidratacion', icon:'💧', lbl:'Hidratación'},
+    {id:'cardio', icon:'🏃', lbl:'Cardio'},
+    {id:'diario', icon:'📝', lbl:'Diario'},
+    {id:'medidas', icon:'📏', lbl:'Medidas'},
+    {id:'ciclo', icon:'🌸', lbl:'Ciclo'},
+    {id:'progresion', icon:'📈', lbl:'Progresión'},
+    {id:'historial', icon:'📅', lbl:'Historial'}
+  ];
+  return React.createElement(React.Fragment, null,
+    React.createElement('div', {className:'sheet-backdrop', onClick:onClose}),
+    React.createElement('div', {className:'sheet'},
+      React.createElement('div', {className:'sheet-handle'}),
+      React.createElement('div', {className:'sheet-title'}, 'Más secciones'),
+      React.createElement('div', {className:'sheet-grid'},
+        items.map(it => React.createElement('button', {
+          key: it.id,
+          className: `sheet-item${active === it.id ? ' active' : ''}`,
+          onClick: () => { onChange(it.id); onClose(); }
+        },
+          React.createElement('span', {className:'sheet-icon'}, it.icon),
+          React.createElement('span', null, it.lbl))))));
+}
+
+/* ─── STICKY DAY PROGRESS ─── */
+function StickyDayProgress({athletes, state}) {
+  const totals = athletes.map(athId => {
+    const r = ROUTINES[athId];
+    const day = r.find(d => d.day === state.activeDay);
+    if (!day || day.rest) return {total:0, done:0, skipped:0, name: ATHLETES[athId].name, rest:true};
+    let done = 0, skipped = 0;
+    day.exercises.forEach((_, i) => {
+      const k = `${athId}_${day.day}_${i}`;
+      if (state.doneEx?.[k]) done++;
+      else if (state.skippedEx?.[k]) skipped++;
+    });
+    return {total: day.exercises.length, done, skipped, name: ATHLETES[athId].name};
+  });
+  const t = totals.reduce((acc, x) => ({total:acc.total+x.total, done:acc.done+x.done, skipped:acc.skipped+x.skipped}), {total:0,done:0,skipped:0});
+  if (t.total === 0) return null;
+  const pct = Math.round((t.done / t.total) * 100);
+  const remainExs = t.total - t.done - t.skipped;
+  const minPerEx = 3.5;
+  const remainMin = Math.round(remainExs * minPerEx);
+  return React.createElement('div', {className:'sticky-progress'},
+    React.createElement('div', {className:'sticky-progress-info'},
+      React.createElement('div', {className:'sticky-progress-text'},
+        React.createElement('span', null, React.createElement('strong', null, `${t.done}/${t.total}`), ' ejercicios'),
+        remainExs > 0 ? React.createElement('span', null, `≈ ${remainMin} min restantes`) : React.createElement('span', {style:{color:'var(--cyan)'}}, '¡Día completado! 🔥')),
+      React.createElement('div', {className:'sticky-progress-bar'},
+        React.createElement('div', {className:'sticky-progress-fill', style:{width:`${pct}%`}}))),
+    React.createElement('div', {className:'sticky-progress-pct'}, `${pct}%`));
+}
+
+/* ─── PR BANNER ─── */
+function PRBanner({pr, onClose}) {
+  useEffect(() => {
+    const t = setTimeout(onClose, 3500);
+    try { if (navigator.vibrate) navigator.vibrate([60, 40, 60, 40, 120]); } catch(e){}
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      [523, 659, 784, 1047].forEach((freq, i) => {
+        const o = ctx.createOscillator();
+        const g = ctx.createGain();
+        o.frequency.value = freq;
+        o.connect(g); g.connect(ctx.destination);
+        g.gain.setValueAtTime(0, ctx.currentTime + i*0.1);
+        g.gain.linearRampToValueAtTime(0.18, ctx.currentTime + i*0.1 + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i*0.1 + 0.25);
+        o.start(ctx.currentTime + i*0.1);
+        o.stop(ctx.currentTime + i*0.1 + 0.25);
+      });
+    } catch(e){}
+    return () => clearTimeout(t);
+  }, []);
+  return React.createElement('div', {className:'pr-banner-overlay', onClick:onClose},
+    React.createElement('div', {className:'pr-banner'},
+      React.createElement('div', {className:'pr-banner-trophy'}, '🏆'),
+      React.createElement('div', {className:'pr-banner-title'}, '¡NUEVO RÉCORD!'),
+      React.createElement('div', {className:'pr-banner-sub'}, pr.exName),
+      React.createElement('div', {className:'pr-banner-delta'}, `${pr.prev || 0} kg → ${pr.weight} kg (+${(pr.weight - (pr.prev || 0)).toFixed(1)})`)));
+}
+
+/* ─── LIVE PARTNER BANNER ─── */
+function LivePartnerBanner({live}) {
+  if (!live) return null;
+  return React.createElement('div', {className:'live-banner'},
+    React.createElement('span', {className:'live-dot'}),
+    React.createElement('div', {className:'live-text'},
+      `${ATHLETES[live.athId].name} está entrenando ahora`,
+      React.createElement('div', {className:'live-text-sub'}, live.currentEx ? `${live.currentEx} · serie ${live.set || 1}` : 'Calentando...')));
+}
+
 /* ─── CELEBRATION CONFETTI ─── */
 function CelebrationConfetti() {
   useEffect(() => {
@@ -2678,6 +3127,11 @@ function App() {
   const [showAvatarModal, setShowAvatarModal] = useState(false);
   const [selectedAthleteForAvatar, setSelectedAthleteForAvatar] = useState(null);
   const [showSplash, setShowSplash] = useState(true);
+  const [prCelebration, setPRCelebration] = useState(null);
+  const [livePartner, setLivePartner] = useState(null);
+  const [showMoreSheet, setShowMoreSheet] = useState(false);
+  const [hasUnreadChat, setHasUnreadChat] = useState(false);
+  const lastChatLenRef = useRef(0);
   const [state, setState] = useState(() => {
     const s = loadLocal();
     return {
@@ -2695,7 +3149,12 @@ function App() {
       hydration: s.hydration || {},
       trainingDiary: s.trainingDiary || {},
       cardioSessions: s.cardioSessions || {},
-      supplementStatus: s.supplementStatus || {}
+      supplementStatus: s.supplementStatus || {},
+      athleteAvatars: s.athleteAvatars || {},
+      progressPhotos: s.progressPhotos || {},
+      bodyMeasures: s.bodyMeasures || {},
+      cycle: s.cycle || {},
+      dailyRatings: s.dailyRatings || {}
     };
   });
   const pendingRef = useRef(false);
@@ -3015,6 +3474,18 @@ function App() {
       };
       const hist = [...cur.history];
       const today = todayISO();
+      // PR detection: compare new weight with max of all previous days
+      const prevHist = hist.filter(h => h.date !== today);
+      const prevMax = prevHist.length ? Math.max(...prevHist.map(h => h.weight)) : 0;
+      if (weight > prevMax && prevMax > 0) {
+        // It's a PR! Find exercise name
+        const parts = key.split('_');
+        const athId = parts[0]; const dayName = parts[1]; const idx = parseInt(parts[2], 10);
+        const dayObj = ROUTINES[athId]?.find(d => d.day === dayName);
+        const exName = dayObj?.exercises?.[idx]?.name || 'Ejercicio';
+        setPRCelebration({exName, weight, prev: prevMax, athId});
+        setTimeout(() => setPRCelebration(null), 3800);
+      }
       if (hist.length && hist[hist.length - 1].date === today) hist[hist.length - 1] = {
         date: today,
         weight
@@ -3032,6 +3503,122 @@ function App() {
       };
     });
   }, []);
+  const saveMeasures = useCallback((athId, payload) => {
+    setState(s => {
+      const m = {...(s.bodyMeasures || {})};
+      const list = [...(m[athId] || [])];
+      const lastIdx = list.findIndex(e => e.date === payload.date);
+      if (lastIdx >= 0) list[lastIdx] = {...list[lastIdx], ...payload};
+      else list.push(payload);
+      m[athId] = list;
+      setToast('📏 Medidas guardadas');
+      return {...s, bodyMeasures: m};
+    });
+  }, []);
+  const startCycle = useCallback(() => {
+    setState(s => {
+      const c = {...(s.cycle || {}), lastPeriodStart: todayISO()};
+      setToast('🌸 Período registrado');
+      return {...s, cycle: c};
+    });
+  }, []);
+  const saveDailyRating = useCallback((athId, type, val) => {
+    setState(s => {
+      const today = todayISO();
+      const r = {...(s.dailyRatings || {})};
+      if (!r[athId]) r[athId] = {};
+      if (!r[athId][today]) r[athId][today] = {};
+      r[athId][today] = {...r[athId][today], [type]: val};
+      return {...s, dailyRatings: r};
+    });
+  }, []);
+  // Auto-timer: restore from localStorage on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('duo_autoTimer');
+      if (saved) {
+        const t = JSON.parse(saved);
+        if (t && t.savedAt && t.running) {
+          const elapsed = Math.floor((Date.now() - t.savedAt) / 1000);
+          const remaining = Math.max(0, t.remaining - elapsed);
+          if (remaining > 0) {
+            setAutoTimer({...t, remaining, running: true});
+          } else {
+            localStorage.removeItem('duo_autoTimer');
+          }
+        }
+      }
+    } catch(e){}
+  }, []);
+  // Persist autoTimer to localStorage on every change
+  useEffect(() => {
+    try {
+      if (autoTimer && autoTimer.running) {
+        localStorage.setItem('duo_autoTimer', JSON.stringify({...autoTimer, savedAt: Date.now()}));
+      } else {
+        localStorage.removeItem('duo_autoTimer');
+      }
+    } catch(e){}
+  }, [autoTimer]);
+  // Live partner status: subscribe + publish
+  useEffect(() => {
+    if (!firebaseReady || !db) return;
+    if (state.athlete === 'both') return;
+    const myId = state.athlete;
+    const partnerId = myId === 'sofia' ? 'angel' : 'sofia';
+    const off = fbOn(`duo_live/${partnerId}`, remote => {
+      if (remote && remote.lastUpdate && (Date.now() - remote.lastUpdate) < 90000) {
+        setLivePartner({athId: partnerId, ...remote});
+      } else {
+        setLivePartner(null);
+      }
+    });
+    return off;
+  }, [firebaseReady, state.athlete]);
+  // Publish own live status when training (any exercise toggled in last 60s)
+  useEffect(() => {
+    if (!firebaseReady || !db) return;
+    if (state.athlete === 'both' || state.section !== 'rutina') return;
+    const myId = state.athlete;
+    const routine = ROUTINES[myId];
+    const day = routine.find(d => d.day === state.activeDay);
+    if (!day || day.rest) return;
+    const doneKeys = Object.keys(state.doneEx || {}).filter(k => state.doneEx[k] && k.startsWith(`${myId}_${day.day}_`));
+    const allDone = doneKeys.length === day.exercises.length;
+    if (allDone || doneKeys.length === 0) {
+      fbSet(`duo_live/${myId}`, null);
+      return;
+    }
+    const nextIdx = day.exercises.findIndex((_, i) => !state.doneEx?.[`${myId}_${day.day}_${i}`]);
+    const currentEx = nextIdx >= 0 ? day.exercises[nextIdx].name : null;
+    fbSet(`duo_live/${myId}`, {currentEx, set: doneKeys.length + 1, total: day.exercises.length, lastUpdate: Date.now()});
+    const heartbeat = setInterval(() => {
+      fbSet(`duo_live/${myId}`, {currentEx, set: doneKeys.length + 1, total: day.exercises.length, lastUpdate: Date.now()});
+    }, 45000);
+    return () => clearInterval(heartbeat);
+  }, [firebaseReady, state.athlete, state.section, state.activeDay, state.doneEx]);
+  // Unread chat detection
+  useEffect(() => {
+    const msgs = Array.isArray(state.chatMessages) ? state.chatMessages : Object.values(state.chatMessages || {});
+    if (state.section === 'chat') {
+      lastChatLenRef.current = msgs.length;
+      setHasUnreadChat(false);
+    } else if (msgs.length > lastChatLenRef.current && lastChatLenRef.current > 0) {
+      const lastMsg = msgs[msgs.length - 1];
+      if (lastMsg && lastMsg.from !== state.athlete) {
+        setHasUnreadChat(true);
+        if ('Notification' in window && Notification.permission === 'granted') {
+          try { new Notification(`💬 ${lastMsg.from === 'sofia' ? 'Sofía' : 'Ángel'}`, {body: lastMsg.text, icon:'/manifest.json', tag:'duo-chat'}); } catch(e){}
+        }
+      }
+    }
+  }, [state.chatMessages, state.section, state.athlete]);
+  // Request notification permission once
+  useEffect(() => {
+    if ('Notification' in window && Notification.permission === 'default') {
+      setTimeout(() => { try { Notification.requestPermission(); } catch(e){} }, 5000);
+    }
+  }, []);
   // Auto-timer countdown
   useEffect(() => {
     if (!autoTimer || !autoTimer.running) return;
@@ -3045,6 +3632,11 @@ function App() {
         o.start();o.stop(ctx.currentTime+0.5);
       }catch(e){}
       try{ if(navigator.vibrate) navigator.vibrate([100,50,100,50,100]); }catch(e){}
+      try {
+        if ('Notification' in window && Notification.permission === 'granted' && document.hidden) {
+          new Notification('⏱ Descanso terminado', {body: autoTimer.name + ' — ¡a la siguiente serie!', tag:'duo-timer'});
+        }
+      } catch(e){}
       setAutoTimer(t => t ? {...t, running:false, remaining:0} : null);
       // Auto-dismiss after 4s
       const dismiss = setTimeout(() => setAutoTimer(null), 4000);
@@ -3473,7 +4065,10 @@ function App() {
     onClick: () => update({
       section: t.id
     })
-  }, /*#__PURE__*/React.createElement("span", null, t.icon), t.lbl))), state.section === 'rutina' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("span", null, t.icon), t.lbl))), state.section === 'rutina' && /*#__PURE__*/React.createElement(React.Fragment, null,
+    React.createElement(StickyDayProgress, {athletes: athletes, state: state}),
+    React.createElement(LivePartnerBanner, {live: livePartner}),
+    /*#__PURE__*/React.createElement("div", {
     className: "streak"
   }, /*#__PURE__*/React.createElement("span", {
     className: "streak-fire"
@@ -3523,7 +4118,14 @@ function App() {
   }))) : /*#__PURE__*/React.createElement(CompareCol, {
     athId: state.athlete,
     section: "nutricion"
-  })), state.section === 'suplementos' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(SupplementsChecklist, {state: state, onToggleSupplement: toggleSupplement})), state.section === 'diario' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(TrainingDiaryView, {state: state, onDiarySave: saveDiary})), state.section === 'progresion' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(WeightProgressionView, {state: state, onAcceptProgression: acceptProgression})), state.section === 'historial' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(HistoryView, {state: state})), state.section === 'cardio' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(CardioView, {state: state, onCardioAdd: addCardioSession})), state.section === 'hidratacion' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(HydrationView, {state: state, onHydrationUpdate: updateHydration})), state.section === 'logros' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(AchievementsView, {state: state})), state.section === 'chat' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(ChatView, {state: state, onSendMessage: sendChatMessage})), state.section === 'progreso' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(AdvancedStatsView, {state: state}), /*#__PURE__*/React.createElement(ProgressPhotosView, {state: state, onPhotoAdd: addProgressPhoto}), state.athlete === 'both' && /*#__PURE__*/React.createElement(ProgressCompare, {
+  })), state.section === 'suplementos' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(SupplementsChecklist, {state: state, onToggleSupplement: toggleSupplement})), state.section === 'diario' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(TrainingDiaryView, {state: state, onDiarySave: saveDiary})), state.section === 'progresion' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(WeightProgressionView, {state: state, onAcceptProgression: acceptProgression})), state.section === 'historial' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(HistoryView, {state: state})), state.section === 'cardio' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(CardioView, {state: state, onCardioAdd: addCardioSession})), state.section === 'hidratacion' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(HydrationView, {state: state, onHydrationUpdate: updateHydration})), state.section === 'logros' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(AchievementsView, {state: state})), state.section === 'chat' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(ChatView, {state: state, onSendMessage: sendChatMessage})),
+state.section === 'medidas' && React.createElement(BodyMeasuresView, {state: state, onMeasureSave: saveMeasures}),
+state.section === 'ciclo' && React.createElement(CycleView, {state: state, onCycleStart: startCycle}),
+state.section === 'progreso' && /*#__PURE__*/React.createElement(React.Fragment, null,
+  React.createElement(WeeklyRecap, {state: state}),
+  state.athlete === 'both' && React.createElement(CoupleChallenge, {state: state}),
+  React.createElement(EnergyRating, {state: state, onRatingSave: saveDailyRating}),
+  /*#__PURE__*/React.createElement(AdvancedStatsView, {state: state}), /*#__PURE__*/React.createElement(ProgressPhotosView, {state: state, onPhotoAdd: addProgressPhoto}), state.athlete === 'both' && /*#__PURE__*/React.createElement(ProgressCompare, {
     state: state
   }), state.athlete === 'both' ? /*#__PURE__*/React.createElement("div", {
     className: "compare"
@@ -3534,7 +4136,11 @@ function App() {
   }))) : /*#__PURE__*/React.createElement(CompareCol, {
     athId: state.athlete,
     section: "progreso"
-  })), celebration && /*#__PURE__*/React.createElement(CelebrationConfetti, null), celebration && /*#__PURE__*/React.createElement("div", {className: "celebration-overlay"}, /*#__PURE__*/React.createElement("div", {className: "celebration-message"}, celebration)), /*#__PURE__*/React.createElement(Timer, null)));
+  })), celebration && /*#__PURE__*/React.createElement(CelebrationConfetti, null), celebration && /*#__PURE__*/React.createElement("div", {className: "celebration-overlay"}, /*#__PURE__*/React.createElement("div", {className: "celebration-message"}, celebration)),
+prCelebration && React.createElement(PRBanner, {pr: prCelebration, onClose: () => setPRCelebration(null)}),
+React.createElement(BottomNav, {active: state.section, onChange: id => update({section: id}), onOpenMore: () => setShowMoreSheet(true), hasUnread: hasUnreadChat}),
+showMoreSheet && React.createElement(MoreSheet, {active: state.section, onChange: id => update({section: id}), onClose: () => setShowMoreSheet(false)}),
+/*#__PURE__*/React.createElement(Timer, null)));
 }
 ReactDOM.createRoot(document.getElementById('root')).render(/*#__PURE__*/React.createElement(App, null));
 
