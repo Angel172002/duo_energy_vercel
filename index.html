@@ -761,6 +761,17 @@ body{
 .cardio-session-meta{display:flex;gap:12px;font-size:11px;color:var(--faint)}
 .cardio-session-stats{display:flex;flex-direction:column;align-items:flex-end;gap:4px;font-family:var(--mono);font-size:12px;font-weight:700;color:var(--cyan)}
 
+/* ===== SUPPLEMENTS CHECKLIST ===== */
+.supp-checklist{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
+.supp-check-card{background:var(--surface);border:2px solid var(--border);border-radius:var(--r);padding:14px;cursor:pointer;transition:all 0.2s;position:relative}
+.supp-check-card.checked{border-color:rgba(75,242,242,0.5);background:rgba(75,242,242,0.08);box-shadow:0 0 12px rgba(75,242,242,0.15)}
+.supp-check-card:hover{border-color:var(--border2);transform:translateY(-1px)}
+.supp-check-icon{font-size:28px;margin-bottom:8px}
+.supp-check-name{font-size:12px;font-weight:700;color:var(--text);margin-bottom:4px}
+.supp-check-time{font-size:10px;color:var(--faint);margin-bottom:8px}
+.supp-check-badge{display:inline-block;width:16px;height:16px;border-radius:50%;background:var(--surface2);border:2px solid var(--border);position:absolute;top:8px;right:8px;display:grid;place-items:center;font-size:10px;font-weight:700}
+.supp-check-card.checked .supp-check-badge{background:var(--cyan);border-color:var(--cyan);color:#fff}
+
 /* ===== ACHIEVEMENTS ===== */
 .achievements-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px}
 .achievement-card{background:var(--surface);border:2px solid var(--border);border-radius:var(--r);padding:16px;text-align:center;transition:all 0.2s;position:relative;overflow:hidden}
@@ -2047,6 +2058,39 @@ function Toast({
   }, msg);
 }
 
+/* ─── SUPPLEMENTS CHECKLIST ─── */
+function SupplementsChecklist({state, onToggleSupplement}) {
+  const today = todayISO();
+  const athletes = state.athlete === 'both' ? ['sofia', 'angel'] : [state.athlete];
+  const suppStatus = state.supplementStatus || {};
+
+  return React.createElement('div', {style: {display: 'flex', flexDirection: 'column', gap: 20}},
+    athletes.map(athId => {
+      const a = ATHLETES[athId];
+      const supps = SUPPLEMENTS[athId];
+      const todayStatus = suppStatus[athId]?.[today] || {};
+      const completed = Object.values(todayStatus).filter(Boolean).length;
+      const pct = supps.length > 0 ? Math.round((completed / supps.length) * 100) : 0;
+
+      return React.createElement('div', {key: athId},
+        React.createElement('div', {style: {marginBottom: 14}},
+          React.createElement('h3', {style: {marginBottom: 8, fontSize: 15, fontWeight: 700}}, a.name),
+          React.createElement('div', {style: {height: 8, background: 'var(--surface)', borderRadius: 4, overflow: 'hidden', border: '1px solid var(--border)'}},
+            React.createElement('div', {style: {height: '100%', width: `${pct}%`, background: 'linear-gradient(90deg, var(--purple), var(--cyan))', transition: 'width 0.3s'}}))),
+        React.createElement('div', {className: 'supp-checklist'},
+          supps.map((s, i) => {
+            const key = `${athId}_${i}`;
+            const checked = todayStatus[key] || false;
+            return React.createElement('div', {key: i, className: `supp-check-card${checked ? ' checked' : ''}`, onClick: () => onToggleSupplement(athId, key, !checked)},
+              React.createElement('div', {className: 'supp-check-badge'}, checked ? '✓' : ''),
+              React.createElement('div', {className: 'supp-check-icon'}, s.icon),
+              React.createElement('div', {className: 'supp-check-name'}, s.name),
+              React.createElement('div', {className: 'supp-check-time'}, s.time));
+          }))
+      );
+    }));
+}
+
 /* ─── CARDIO VIEW ─── */
 function CardioView({state, onCardioAdd}) {
   const [type, setType] = useState('running');
@@ -2416,7 +2460,8 @@ function App() {
       chatMessages: s.chatMessages || {},
       hydration: s.hydration || {},
       trainingDiary: s.trainingDiary || {},
-      cardioSessions: s.cardioSessions || {}
+      cardioSessions: s.cardioSessions || {},
+      supplementStatus: s.supplementStatus || {}
     };
   });
   const pendingRef = useRef(false);
@@ -2451,7 +2496,8 @@ function App() {
             chatMessages: remote.chatMessages || s.chatMessages,
             hydration: {...(remote.hydration || {}), ...(s.hydration || {})},
             trainingDiary: {...(remote.trainingDiary || {}), ...(s.trainingDiary || {})},
-            cardioSessions: {...(remote.cardioSessions || {}), ...(s.cardioSessions || {})}
+            cardioSessions: {...(remote.cardioSessions || {}), ...(s.cardioSessions || {})},
+            supplementStatus: {...(remote.supplementStatus || {}), ...(s.supplementStatus || {})}
           };
           saveLocal(merged);
           return merged;
@@ -2694,6 +2740,16 @@ function App() {
       return {...s, cardioSessions: cardio};
     });
   }, []);
+  const toggleSupplement = useCallback((athId, suppKey, checked) => {
+    setState(s => {
+      const today = todayISO();
+      const suppStatus = {...(s.supplementStatus || {})};
+      if (!suppStatus[athId]) suppStatus[athId] = {};
+      if (!suppStatus[athId][today]) suppStatus[athId][today] = {};
+      suppStatus[athId][today][suppKey] = checked;
+      return {...s, supplementStatus: suppStatus};
+    });
+  }, []);
   const saveWeight = useCallback((key, weight) => {
     setState(s => {
       const w = {
@@ -2824,8 +2880,9 @@ function App() {
       saveNote: saveNote
     })), section === 'nutricion' && /*#__PURE__*/React.createElement(NutritionView, {
       athId: athId
-    }), section === 'suplementos' && /*#__PURE__*/React.createElement(SupplementsView, {
-      athId: athId
+    }), section === 'suplementos' && /*#__PURE__*/React.createElement(SupplementsChecklist, {
+      state: state,
+      onToggleSupplement: toggleSupplement
     }), section === 'progreso' && React.createElement(ProgressView, {
       state: state,
       athId: athId,
@@ -3185,16 +3242,7 @@ function App() {
   }))) : /*#__PURE__*/React.createElement(CompareCol, {
     athId: state.athlete,
     section: "nutricion"
-  })), state.section === 'suplementos' && (state.athlete === 'both' ? /*#__PURE__*/React.createElement("div", {
-    className: "compare"
-  }, athletes.map(id => /*#__PURE__*/React.createElement(CompareCol, {
-    key: id,
-    athId: id,
-    section: "suplementos"
-  }))) : /*#__PURE__*/React.createElement(CompareCol, {
-    athId: state.athlete,
-    section: "suplementos"
-  })), state.section === 'diario' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(TrainingDiaryView, {state: state, onDiarySave: saveDiary})), state.section === 'progresion' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(WeightProgressionView, {state: state, onAcceptProgression: acceptProgression})), state.section === 'historial' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(HistoryView, {state: state})), state.section === 'cardio' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(CardioView, {state: state, onCardioAdd: addCardioSession})), state.section === 'hidratacion' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(HydrationView, {state: state, onHydrationUpdate: updateHydration})), state.section === 'logros' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(AchievementsView, {state: state})), state.section === 'chat' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(ChatView, {state: state, onSendMessage: sendChatMessage})), state.section === 'progreso' && /*#__PURE__*/React.createElement(React.Fragment, null, state.athlete === 'both' && /*#__PURE__*/React.createElement(ProgressCompare, {
+  })), state.section === 'suplementos' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(SupplementsChecklist, {state: state, onToggleSupplement: toggleSupplement})), state.section === 'diario' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(TrainingDiaryView, {state: state, onDiarySave: saveDiary})), state.section === 'progresion' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(WeightProgressionView, {state: state, onAcceptProgression: acceptProgression})), state.section === 'historial' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(HistoryView, {state: state})), state.section === 'cardio' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(CardioView, {state: state, onCardioAdd: addCardioSession})), state.section === 'hidratacion' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(HydrationView, {state: state, onHydrationUpdate: updateHydration})), state.section === 'logros' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(AchievementsView, {state: state})), state.section === 'chat' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(ChatView, {state: state, onSendMessage: sendChatMessage})), state.section === 'progreso' && /*#__PURE__*/React.createElement(React.Fragment, null, state.athlete === 'both' && /*#__PURE__*/React.createElement(ProgressCompare, {
     state: state
   }), state.athlete === 'both' ? /*#__PURE__*/React.createElement("div", {
     className: "compare"
