@@ -450,8 +450,14 @@ body{
 .timer-fab{position:fixed;right:20px;bottom:24px;z-index:100;display:flex;flex-direction:column;align-items:flex-end;gap:10px}
 .timer-panel{background:var(--deep);border:1px solid var(--border2);border-radius:var(--rl);padding:18px;width:210px;box-shadow:0 20px 60px rgba(0,0,0,0.5);backdrop-filter:blur(20px)}
 .timer-panel-title{font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:var(--faint);font-weight:700;margin-bottom:10px}
-.timer-display{font-family:var(--mono);font-size:40px;font-weight:700;text-align:center;letter-spacing:-0.02em;margin-bottom:12px;color:var(--cyan)}
+.timer-display{font-family:var(--mono);font-size:40px;font-weight:700;text-align:center;letter-spacing:-0.02em;margin-bottom:12px;color:var(--cyan);transition:color 0.3s,text-shadow 0.3s}
+.timer-display.timer-high{color:var(--cyan)}
+.timer-display.timer-mid{color:#FFA500}
+.timer-display.timer-low{color:#FF6B6B;animation:timer-pulse 0.5s ease-in-out infinite}
+@keyframes timer-pulse{0%,100%{text-shadow:0 0 10px rgba(255,107,107,0.5)}50%{text-shadow:0 0 20px rgba(255,107,107,0.8)}}
 [data-theme=light] .timer-display{color:var(--purple)}
+[data-theme=light] .timer-display.timer-high{color:var(--purple)}
+[data-theme=light] .timer-display.timer-mid{color:var(--indigo)}
 .timer-presets{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px}
 .timer-preset{padding:4px 8px;border-radius:6px;background:var(--surface);border:1px solid var(--border);font-size:11px;font-weight:600;font-family:var(--mono);transition:all 0.15s}
 .timer-preset:hover{border-color:var(--cyan);color:var(--cyan)}
@@ -2105,6 +2111,7 @@ function Timer() {
       iRef.current = setInterval(() => setSecs(s => s - 1), 1000);
     } else if (secs === 0 && running) {
       setRunning(false);
+      if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
       try {
         const ctx = new (window.AudioContext || window.webkitAudioContext)();
         const o = ctx.createOscillator();
@@ -2128,7 +2135,7 @@ function Timer() {
   }, /*#__PURE__*/React.createElement("div", {
     className: "timer-panel-title"
   }, "Descanso"), /*#__PURE__*/React.createElement("div", {
-    className: "timer-display"
+    className: `timer-display${secs <= 10 ? ' timer-low' : secs <= 30 ? ' timer-mid' : ' timer-high'}`
   }, fmt(secs)), /*#__PURE__*/React.createElement("div", {
     className: "timer-presets"
   }, [45, 60, 90, 120, 150, 180].map(s => /*#__PURE__*/React.createElement("button", {
