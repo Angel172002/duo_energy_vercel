@@ -663,6 +663,40 @@ body{
 .chat-send:disabled{opacity:0.5;cursor:not-allowed}
 .chat-empty{text-align:center;padding:40px 20px;color:var(--faint);font-size:14px}
 
+/* ===== HYDRATION ===== */
+.hydration-card{display:flex;flex-direction:column;gap:16px;padding:24px;background:linear-gradient(135deg,rgba(139,61,217,0.08),rgba(75,242,242,0.08));border:1px solid var(--border);border-radius:var(--rl)}
+.hydration-header{display:flex;justify-content:space-between;align-items:center}
+.hydration-title{font-size:16px;font-weight:700}
+.hydration-goal{font-size:13px;color:var(--faint);margin-top:2px}
+.hydration-progress-bar{height:12px;background:var(--surface);border-radius:6px;overflow:hidden;border:1px solid var(--border)}
+.hydration-fill{height:100%;background:linear-gradient(90deg,var(--purple),var(--cyan));transition:width 0.4s cubic-bezier(0.4,0,0.2,1);box-shadow:0 0 12px rgba(75,242,242,0.4)}
+.hydration-stats{display:flex;justify-content:space-between;font-family:var(--mono);font-size:13px;font-weight:700;margin-top:8px}
+.hydration-current{color:var(--cyan)}
+.hydration-goal-text{color:var(--faint)}
+.hydration-cups{display:grid;grid-template-columns:repeat(auto-fit,minmax(60px,1fr));gap:8px;margin-top:16px}
+.hydration-cup{aspect-ratio:1/1;border-radius:var(--r);background:var(--surface);border:2px solid var(--border);display:grid;place-items:center;font-size:24px;transition:all 0.2s;cursor:pointer;position:relative;overflow:hidden}
+.hydration-cup::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,var(--purple),var(--cyan));opacity:0;transition:opacity 0.2s}
+.hydration-cup.filled::before{opacity:0.3}
+.hydration-cup:hover{border-color:var(--border2);transform:scale(1.05)}
+.hydration-cup-number{position:relative;z-index:1;font-weight:700}
+.hydration-cup.filled .hydration-cup-number{color:var(--cyan);font-size:28px}
+
+/* ===== TRAINING DIARY ===== */
+.diary-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:20px;margin-bottom:16px}
+.diary-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border)}
+.diary-date{font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--faint);font-weight:600}
+.diary-title{font-size:16px;font-weight:700;margin:4px 0 0 0}
+.diary-textarea{width:100%;background:var(--deep);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;color:var(--text);font-size:13px;font-family:inherit;resize:vertical;min-height:120px;outline:none;line-height:1.5;transition:border-color 0.2s}
+.diary-textarea:focus{border-color:var(--border2)}
+.diary-textarea::placeholder{color:var(--faint)}
+.diary-actions{display:flex;gap:8px;margin-top:12px;justify-content:flex-end}
+.diary-save{padding:10px 20px;border-radius:var(--r);background:linear-gradient(135deg,var(--purple),var(--indigo));color:#fff;font-size:13px;font-weight:700;border:none;cursor:pointer;transition:all 0.2s}
+.diary-save:hover{filter:brightness(1.1)}
+.diary-cancel{padding:10px 20px;border-radius:var(--r);background:var(--surface2);border:1px solid var(--border);color:var(--dim);font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s}
+.diary-cancel:hover{border-color:var(--border2);color:var(--text)}
+.diary-display{background:var(--deep);border:1px solid var(--border);border-radius:var(--r);padding:14px;font-size:13px;color:var(--text);line-height:1.6;white-space:pre-wrap;word-wrap:break-word}
+.diary-empty{text-align:center;padding:40px 20px;color:var(--faint);font-size:13px}
+
 /* ===== ACHIEVEMENTS ===== */
 .achievements-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px}
 .achievement-card{background:var(--surface);border:2px solid var(--border);border-radius:var(--r);padding:16px;text-align:center;transition:all 0.2s;position:relative;overflow:hidden}
@@ -1949,6 +1983,93 @@ function Toast({
   }, msg);
 }
 
+/* ─── TRAINING DIARY COMPONENT ─── */
+function TrainingDiaryView({state, onDiarySave}) {
+  const [draft, setDraft] = useState('');
+  const [editing, setEditing] = useState(false);
+  const today = todayISO();
+  const athletes = state.athlete === 'both' ? ['sofia', 'angel'] : [state.athlete];
+  const diary = state.trainingDiary || {};
+
+  const handleSave = (athId) => {
+    onDiarySave(athId, draft.trim());
+    setDraft('');
+    setEditing(false);
+  };
+
+  return React.createElement('div', {style: {display: 'flex', flexDirection: 'column', gap: 20}},
+    athletes.map(athId => {
+      const today_entry = diary[athId]?.[today];
+      const a = ATHLETES[athId];
+
+      return React.createElement('div', {key: athId, className: 'diary-card'},
+        React.createElement('div', {className: 'diary-header'},
+          React.createElement('div', null,
+            React.createElement('div', {className: 'diary-date'}, today),
+            React.createElement('div', {className: 'diary-title'}, a.name)),
+          React.createElement('div', {style: {fontSize: 24}}, '📝')),
+        !editing && today_entry ? React.createElement('div', {className: 'diary-display'}, today_entry) : null,
+        !editing && !today_entry ? React.createElement('div', {className: 'diary-empty'}, '📝 Sin notas aún') : null,
+        !editing ? React.createElement('button', {
+          onClick: () => {setDraft(today_entry || ''); setEditing(true);},
+          style: {width: '100%', padding: '10px', borderRadius: 'var(--r)', background: 'var(--surface2)', border: '1px solid var(--border)', color: 'var(--dim)', cursor: 'pointer', marginTop: '12px', fontSize: '13px', fontWeight: '600', transition: 'all 0.2s'},
+          onMouseEnter: e => {e.target.style.borderColor = 'var(--border2)'; e.target.style.color = 'var(--text)';},
+          onMouseLeave: e => {e.target.style.borderColor = 'var(--border)'; e.target.style.color = 'var(--dim)';}
+        }, today_entry ? 'Editar nota' : 'Escribir nota') : null,
+        editing ? React.createElement('div', {style: {marginTop: '12px'}},
+          React.createElement('textarea', {
+            className: 'diary-textarea',
+            value: draft,
+            onChange: e => setDraft(e.target.value),
+            placeholder: 'Cómo te sentiste hoy, dolor, energía, observaciones...',
+            autoFocus: true
+          }),
+          React.createElement('div', {className: 'diary-actions'},
+            React.createElement('button', {className: 'diary-cancel', onClick: () => {setEditing(false); setDraft('');}}, 'Cancelar'),
+            React.createElement('button', {className: 'diary-save', onClick: () => handleSave(athId)}, 'Guardar'))) : null);
+    }));
+}
+
+/* ─── HYDRATION COMPONENT ─── */
+function HydrationView({state, onHydrationUpdate}) {
+  const today = todayISO();
+  const hydration = state.hydration || {};
+  const athletes = state.athlete === 'both' ? ['sofia', 'angel'] : [state.athlete];
+
+  return React.createElement('div', {style: {display: 'flex', flexDirection: 'column', gap: 20}},
+    athletes.map(athId => {
+      const a = ATHLETES[athId];
+      const goals = {sofia: 2500, angel: 4000};
+      const goal = goals[athId];
+      const today_data = hydration[athId]?.[today] || 0;
+      const pct = Math.min(100, Math.round((today_data / goal) * 100));
+      const cups = Math.ceil(goal / 250);
+
+      return React.createElement('div', {key: athId, className: 'hydration-card'},
+        React.createElement('div', {className: 'hydration-header'},
+          React.createElement('div', null,
+            React.createElement('div', {className: 'hydration-title'}, a.name),
+            React.createElement('div', {className: 'hydration-goal'}, '💧 Hidratación diaria')),
+          React.createElement('div', {style: {fontSize: 28}}, '💧')),
+        React.createElement('div', {className: 'hydration-progress-bar'},
+          React.createElement('div', {className: 'hydration-fill', style: {width: `${pct}%`}})),
+        React.createElement('div', {className: 'hydration-stats'},
+          React.createElement('span', {className: 'hydration-current'}, `${today_data}ml`),
+          React.createElement('span', {className: 'hydration-goal-text'}, `Meta: ${goal}ml`)),
+        React.createElement('div', {className: 'hydration-cups'},
+          Array.from({length: cups}, (_, i) => {
+            const ml = (i + 1) * 250;
+            const filled = today_data >= ml;
+            return React.createElement('button', {
+              key: i,
+              className: `hydration-cup${filled ? ' filled' : ''}`,
+              onClick: () => onHydrationUpdate(athId, filled ? today_data - 250 : today_data + 250),
+              title: `${ml}ml`
+            }, React.createElement('span', {className: 'hydration-cup-number'}, filled ? '✓' : i + 1));
+          })));
+    }));
+}
+
 /* ─── CHAT COMPONENT ─── */
 function ChatView({state, onSendMessage}) {
   const [msgInput, setMsgInput] = useState('');
@@ -2050,7 +2171,9 @@ function App() {
       theme: s.theme || 'dark',
       weights: s.weights || {},
       sessionLog: s.sessionLog || {},
-      chatMessages: s.chatMessages || {}
+      chatMessages: s.chatMessages || {},
+      hydration: s.hydration || {},
+      trainingDiary: s.trainingDiary || {}
     };
   });
   const pendingRef = useRef(false);
@@ -2082,7 +2205,9 @@ function App() {
             bodyWeight: mergeBodyWeight(remote.bodyWeight||{}, s.bodyWeight||{}),
             weights: mergeWeights(remote.weights || {}, s.weights || {}),
             sessionLog: mergeLog(remote.sessionLog || {}, s.sessionLog || {}),
-            chatMessages: remote.chatMessages || s.chatMessages
+            chatMessages: remote.chatMessages || s.chatMessages,
+            hydration: {...(remote.hydration || {}), ...(s.hydration || {})},
+            trainingDiary: {...(remote.trainingDiary || {}), ...(s.trainingDiary || {})}
           };
           saveLocal(merged);
           return merged;
@@ -2282,6 +2407,25 @@ function App() {
     setState(s => ({...s, chatMessages: messages}));
     if (firebaseReady && db) fbSet('duo_chat', messages);
   }, [firebaseReady]);
+  const updateHydration = useCallback((athId, ml) => {
+    setState(s => {
+      const today = todayISO();
+      const hydro = {...(s.hydration || {})};
+      if (!hydro[athId]) hydro[athId] = {};
+      hydro[athId][today] = Math.max(0, ml);
+      return {...s, hydration: hydro};
+    });
+  }, []);
+  const saveDiary = useCallback((athId, text) => {
+    setState(s => {
+      const today = todayISO();
+      const diary = {...(s.trainingDiary || {})};
+      if (!diary[athId]) diary[athId] = {};
+      if (text) diary[athId][today] = text;
+      else delete diary[athId][today];
+      return {...s, trainingDiary: diary};
+    });
+  }, []);
   const saveWeight = useCallback((key, weight) => {
     setState(s => {
       const w = {
@@ -2686,6 +2830,14 @@ function App() {
     icon: '💊',
     lbl: 'Suplementos'
   }, {
+    id: 'diario',
+    icon: '📝',
+    lbl: 'Diario'
+  }, {
+    id: 'hidratacion',
+    icon: '💧',
+    lbl: 'Hidratación'
+  }, {
     id: 'logros',
     icon: '🏆',
     lbl: 'Logros'
@@ -2746,7 +2898,7 @@ function App() {
   }))) : /*#__PURE__*/React.createElement(CompareCol, {
     athId: state.athlete,
     section: "suplementos"
-  })), state.section === 'logros' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(AchievementsView, {state: state})), state.section === 'chat' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(ChatView, {state: state, onSendMessage: sendChatMessage})), state.section === 'progreso' && /*#__PURE__*/React.createElement(React.Fragment, null, state.athlete === 'both' && /*#__PURE__*/React.createElement(ProgressCompare, {
+  })), state.section === 'diario' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(TrainingDiaryView, {state: state, onDiarySave: saveDiary})), state.section === 'hidratacion' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(HydrationView, {state: state, onHydrationUpdate: updateHydration})), state.section === 'logros' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(AchievementsView, {state: state})), state.section === 'chat' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(ChatView, {state: state, onSendMessage: sendChatMessage})), state.section === 'progreso' && /*#__PURE__*/React.createElement(React.Fragment, null, state.athlete === 'both' && /*#__PURE__*/React.createElement(ProgressCompare, {
     state: state
   }), state.athlete === 'both' ? /*#__PURE__*/React.createElement("div", {
     className: "compare"
