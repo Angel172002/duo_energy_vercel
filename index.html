@@ -1873,7 +1873,7 @@ function AdvancedStatsView({state}) {
           });
         });
       });
-    };
+    });
     const wkArr = Object.entries(weeks).sort((a, b) => a[0].localeCompare(b[0])).slice(-12);
     const avgComp = wkArr.length > 0 ? Math.round(wkArr.reduce((s, [_, d]) => s + (d.completed / d.total), 0) / wkArr.length * 100) : 0;
     const bwHistory = (bodyWeights[athId] || []).sort((a, b) => new Date(a.date) - new Date(b.date));
@@ -3526,7 +3526,7 @@ function App() {
   }))) : /*#__PURE__*/React.createElement(CompareCol, {
     athId: state.athlete,
     section: "progreso"
-  })), celebration && /*#__PURE__*/React.createElement(CelebrationConfetti, null), celebration && /*#__PURE__*/React.createElement("div", {className: "celebration-overlay"}, /*#__PURE__*/React.createElement("div", {className: "celebration-message"}, celebration)), /*#__PURE__*/React.createElement(Timer, null))));
+  })), celebration && /*#__PURE__*/React.createElement(CelebrationConfetti, null), celebration && /*#__PURE__*/React.createElement("div", {className: "celebration-overlay"}, /*#__PURE__*/React.createElement("div", {className: "celebration-message"}, celebration)), /*#__PURE__*/React.createElement(Timer, null)));
 }
 ReactDOM.createRoot(document.getElementById('root')).render(/*#__PURE__*/React.createElement(App, null));
 
