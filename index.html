@@ -615,6 +615,22 @@ body{
 [data-theme=light] .bw-delta-pos{color:var(--purple)}
 .bw-empty{padding:30px 20px;text-align:center;color:var(--faint);font-size:12px}
 
+/* ===== ADVANCED STATS ===== */
+.advanced-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:24px;margin-bottom:20px}
+.stats-col{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px}
+.stats-col h3{margin:0 0 16px;font-size:16px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:8px}
+.stats-cards{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:20px}
+.stat-card{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:16px;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
+.stat-val{font-size:24px;font-weight:700;color:var(--cyan);font-family:var(--mono);line-height:1}
+[data-theme=light] .stat-val{color:var(--purple)}
+.stat-lbl{font-size:11px;color:var(--faint);font-weight:600;text-transform:uppercase;letter-spacing:0.05em}
+.mini-chart{background:var(--surface2);border-radius:12px;padding:14px;border:1px solid var(--border)}
+.chart-title{font-size:12px;font-weight:700;color:var(--text);margin-bottom:12px;letter-spacing:-0.01em}
+.bar-chart{display:flex;gap:4px;align-items:flex-end;height:100px;width:100%}
+.bar-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;position:relative;min-width:0}
+.bar{width:100%;background:var(--purple);border-radius:6px 6px 0 0;min-height:4px;transition:background 0.2s}
+.bar-label{font-size:8px;color:var(--faint);font-weight:600;text-transform:uppercase}
+
 /* ===== BACKUP MENU ===== */
 .backup-menu-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(6px);display:grid;place-items:center;z-index:1000;padding:14px;animation:fadeIn 0.25s ease}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
@@ -1671,6 +1687,60 @@ function BodyWeightCard({athId, state, saveBodyWeight}){
         React.createElement("span",null,history[history.length-1].date))
     ) : React.createElement("div",{className:"bw-empty"}, history.length===1 ? "Registra al menos otro peso para ver tu evolución 📈" : "Sin datos aún. Registra tu primer peso arriba ⬆️")
   );
+}
+function AdvancedStatsView({state}) {
+  const today = todayISO();
+  const athletes = state.athlete === 'both' ? ['sofia', 'angel'] : [state.athlete];
+  const renderAthleteStats = (athId) => {
+    const sessions = state.exercisesCompleted || {};
+    const bodyWeights = state.bodyWeights || {};
+    const logs = state.sessionLog || {};
+    const athLog = logs[athId] || {};
+    const weeks = {};
+    Object.entries(athLog).forEach(([date, data]) => {
+      const wk = new Date(date).toISOString().slice(0, 10);
+      const week = Math.floor((new Date(wk).getTime() - new Date(wk.slice(0, 8) + '01').getTime()) / (7*24*3600*1000));
+      const yr = wk.slice(0, 7);
+      const wk_key = `${yr}-W${week}`;
+      if (!weeks[wk_key]) weeks[wk_key] = {total_vol: 0, completed: 0, total: 0, dates: []};
+      weeks[wk_key].dates.push(date);
+      if (data.completedAll) weeks[wk_key].completed++;
+      weeks[wk_key].total++;
+      const routines = ROUTINES[athId] || [];
+      routines.forEach(d => {
+        d.exercises?.forEach((ex, i) => {
+          const key = `${athId}_${d.day}_${i}`;
+          const hist = state.exerciseHistories?.[key] || [];
+          hist.forEach(h => {
+            if (h.date === date && h.weight && h.reps && h.sets) {
+              weeks[wk_key].total_vol += (h.weight * h.reps * h.sets);
+            }
+          });
+        });
+      });
+    };
+    const wkArr = Object.entries(weeks).sort((a, b) => a[0].localeCompare(b[0])).slice(-12);
+    const avgComp = wkArr.length > 0 ? Math.round(wkArr.reduce((s, [_, d]) => s + (d.completed / d.total), 0) / wkArr.length * 100) : 0;
+    const bwHistory = (bodyWeights[athId] || []).sort((a, b) => new Date(a.date) - new Date(b.date));
+    const trend = bwHistory.length >= 2 ? ((bwHistory[bwHistory.length-1].weight - bwHistory[0].weight) / (bwHistory.length - 1)) : 0;
+    const projected = bwHistory.length > 0 ? bwHistory[bwHistory.length-1].weight + (trend * 8) : 0;
+    return React.createElement("div", {className: "stats-col"},
+      React.createElement("h3", null, `📊 ${athId === 'sofia' ? 'Sofía' : 'Ángel'}`),
+      React.createElement("div", {className: "stats-cards"},
+        React.createElement("div", {className: "stat-card"}, React.createElement("div", {className: "stat-val"}, `${avgComp}%`), React.createElement("div", {className: "stat-lbl"}, "Completitud promedio")),
+        React.createElement("div", {className: "stat-card"}, React.createElement("div", {className: "stat-val"}, `${Math.round(wkArr[wkArr.length-1]?.total_vol || 0)}`), React.createElement("div", {className: "stat-lbl"}, "Tonelaje esta semana (kg)")),
+        React.createElement("div", {className: "stat-card"}, React.createElement("div", {className: "stat-val"}, `${trend > 0 ? '+' : ''}${trend.toFixed(2)}`), React.createElement("div", {className: "stat-lbl"}, "kg/semana (tendencia)")),
+        React.createElement("div", {className: "stat-card"}, React.createElement("div", {className: "stat-val"}, `${projected.toFixed(1)}`), React.createElement("div", {className: "stat-lbl"}, "Peso estimado en 8 semanas"))
+      ),
+      React.createElement("div", {className: "mini-chart"},
+        React.createElement("div", {className: "chart-title"}, "Tonelaje últimas 12 semanas"),
+        React.createElement("div", {className: "bar-chart"},
+          wkArr.map(([wk, d]) => React.createElement("div", {key: wk, className: "bar-item", title: `${wk}: ${Math.round(d.total_vol)}kg`}, React.createElement("div", {className: "bar", style: {height: `${Math.min(100, (d.total_vol / 5000) * 100)}%`, backgroundColor: d.total_vol > 4000 ? '#4BF2F2' : '#8B3DD9'}}), React.createElement("span", {className: "bar-label"}, wk.split('-W')[1])))
+        )
+      )
+    );
+  };
+  return React.createElement("div", {className: "advanced-stats"}, athletes.map(id => renderAthleteStats(id)));
 }
 
 function ProgressView({
@@ -3242,7 +3312,7 @@ function App() {
   }))) : /*#__PURE__*/React.createElement(CompareCol, {
     athId: state.athlete,
     section: "nutricion"
-  })), state.section === 'suplementos' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(SupplementsChecklist, {state: state, onToggleSupplement: toggleSupplement})), state.section === 'diario' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(TrainingDiaryView, {state: state, onDiarySave: saveDiary})), state.section === 'progresion' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(WeightProgressionView, {state: state, onAcceptProgression: acceptProgression})), state.section === 'historial' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(HistoryView, {state: state})), state.section === 'cardio' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(CardioView, {state: state, onCardioAdd: addCardioSession})), state.section === 'hidratacion' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(HydrationView, {state: state, onHydrationUpdate: updateHydration})), state.section === 'logros' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(AchievementsView, {state: state})), state.section === 'chat' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(ChatView, {state: state, onSendMessage: sendChatMessage})), state.section === 'progreso' && /*#__PURE__*/React.createElement(React.Fragment, null, state.athlete === 'both' && /*#__PURE__*/React.createElement(ProgressCompare, {
+  })), state.section === 'suplementos' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(SupplementsChecklist, {state: state, onToggleSupplement: toggleSupplement})), state.section === 'diario' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(TrainingDiaryView, {state: state, onDiarySave: saveDiary})), state.section === 'progresion' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(WeightProgressionView, {state: state, onAcceptProgression: acceptProgression})), state.section === 'historial' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(HistoryView, {state: state})), state.section === 'cardio' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(CardioView, {state: state, onCardioAdd: addCardioSession})), state.section === 'hidratacion' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(HydrationView, {state: state, onHydrationUpdate: updateHydration})), state.section === 'logros' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(AchievementsView, {state: state})), state.section === 'chat' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(ChatView, {state: state, onSendMessage: sendChatMessage})), state.section === 'progreso' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(AdvancedStatsView, {state: state}), state.athlete === 'both' && /*#__PURE__*/React.createElement(ProgressCompare, {
     state: state
   }), state.athlete === 'both' ? /*#__PURE__*/React.createElement("div", {
     className: "compare"
