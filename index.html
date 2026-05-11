@@ -743,6 +743,24 @@ body{
 .history-ex-stats{display:flex;gap:12px;font-family:var(--mono);font-size:11px;color:var(--faint)}
 .history-empty{text-align:center;padding:40px 20px;color:var(--faint);font-size:13px}
 
+/* ===== CARDIO ===== */
+.cardio-form{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:20px;margin-bottom:20px;display:flex;flex-direction:column;gap:14px}
+.cardio-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.cardio-row.full{grid-column:1/-1}
+.cardio-field{display:flex;flex-direction:column;gap:6px}
+.cardio-label{font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--faint)}
+.cardio-select,.cardio-input{background:var(--deep);border:1px solid var(--border);border-radius:var(--r);padding:10px 12px;color:var(--text);font-size:13px;outline:none;transition:border-color 0.2s;font-family:inherit}
+.cardio-select:focus,.cardio-input:focus{border-color:var(--border2)}
+.cardio-btn{padding:12px;border-radius:var(--r);background:linear-gradient(135deg,var(--purple),var(--indigo));color:#fff;font-size:13px;font-weight:700;border:none;cursor:pointer;transition:all 0.2s;grid-column:1/-1}
+.cardio-btn:hover{filter:brightness(1.1)}
+.cardio-history{display:flex;flex-direction:column;gap:10px}
+.cardio-session{background:var(--surface);border-left:3px solid var(--cyan);border-radius:var(--r);padding:14px;display:grid;grid-template-columns:1fr auto;gap:14px}
+.cardio-session-info{display:flex;flex-direction:column;gap:6px}
+.cardio-type-emoji{font-size:20px}
+.cardio-session-title{font-size:13px;font-weight:700;display:flex;align-items:center;gap:8px}
+.cardio-session-meta{display:flex;gap:12px;font-size:11px;color:var(--faint)}
+.cardio-session-stats{display:flex;flex-direction:column;align-items:flex-end;gap:4px;font-family:var(--mono);font-size:12px;font-weight:700;color:var(--cyan)}
+
 /* ===== ACHIEVEMENTS ===== */
 .achievements-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px}
 .achievement-card{background:var(--surface);border:2px solid var(--border);border-radius:var(--r);padding:16px;text-align:center;transition:all 0.2s;position:relative;overflow:hidden}
@@ -2029,6 +2047,53 @@ function Toast({
   }, msg);
 }
 
+/* ─── CARDIO VIEW ─── */
+function CardioView({state, onCardioAdd}) {
+  const [type, setType] = useState('running');
+  const [minutes, setMinutes] = useState('30');
+  const [distance, setDistance] = useState('5');
+  const cardioTypes = {running: {label: '🏃 Correr', cal_per_min: 12}, cycling: {label: '🚴 Ciclismo', cal_per_min: 10}, walking: {label: '🚶 Caminar', cal_per_min: 5}};
+  const athletes = state.athlete === 'both' ? ['sofia', 'angel'] : [state.athlete];
+  const cardioSessions = state.cardioSessions || {};
+
+  const handleAdd = (athId) => {
+    const mins = parseInt(minutes) || 0;
+    const cals = Math.round(mins * cardioTypes[type].cal_per_min);
+    if (mins > 0) onCardioAdd(athId, {type, minutes: mins, distance: distance || '-', calories: cals, date: todayISO(), time: new Date().toLocaleTimeString('es-MX', {hour: '2-digit', minute: '2-digit'})});
+  };
+
+  return React.createElement('div', {style: {display: 'flex', flexDirection: 'column', gap: 20}},
+    athletes.map(athId => React.createElement('div', {key: athId},
+      React.createElement('div', {className: 'cardio-form'},
+        React.createElement('div', {style: {fontSize: 16, fontWeight: 700}}, ATHLETES[athId].name),
+        React.createElement('div', {className: 'cardio-row'},
+          React.createElement('div', {className: 'cardio-field'},
+            React.createElement('label', {className: 'cardio-label'}, 'Actividad'),
+            React.createElement('select', {className: 'cardio-select', value: type, onChange: e => setType(e.target.value)},
+              Object.entries(cardioTypes).map(([k, v]) => React.createElement('option', {key: k, value: k}, v.label)))),
+          React.createElement('div', {className: 'cardio-field'},
+            React.createElement('label', {className: 'cardio-label'}, 'Minutos'),
+            React.createElement('input', {className: 'cardio-input', type: 'number', min: '1', value: minutes, onChange: e => setMinutes(e.target.value), placeholder: '30'}))),
+        React.createElement('div', {className: 'cardio-row'},
+          React.createElement('div', {className: 'cardio-field'},
+            React.createElement('label', {className: 'cardio-label'}, 'Distancia (km)'),
+            React.createElement('input', {className: 'cardio-input', type: 'number', min: '0', step: '0.5', value: distance, onChange: e => setDistance(e.target.value), placeholder: '5'})),
+          React.createElement('div', {className: 'cardio-field'},
+            React.createElement('label', {className: 'cardio-label'}, 'Calorías est.'),
+            React.createElement('div', {style: {padding: '10px 12px', background: 'var(--deep)', borderRadius: 'var(--r)', fontSize: '13px', fontWeight: '700', color: 'var(--cyan)', fontFamily: 'var(--mono)'}}, Math.round((parseInt(minutes) || 0) * cardioTypes[type].cal_per_min)))),
+        React.createElement('button', {className: 'cardio-btn', onClick: () => handleAdd(athId)}, '➕ Registrar cardio')),
+      cardioSessions[athId] && cardioSessions[athId].length > 0 ? React.createElement('div', {className: 'cardio-history'},
+        React.createElement('div', {style: {fontSize: 13, fontWeight: 700, marginBottom: 8}}, '📋 Historial'),
+        cardioSessions[athId].slice().reverse().map((s, i) => React.createElement('div', {key: i, className: 'cardio-session'},
+          React.createElement('div', {className: 'cardio-session-info'},
+            React.createElement('div', {className: 'cardio-session-title'}, React.createElement('span', null, cardioTypes[s.type].label.split(' ')[0]), cardioTypes[s.type].label.split(' ')[1]),
+            React.createElement('div', {className: 'cardio-session-meta'}, s.date, ' · ', s.time)),
+          React.createElement('div', {className: 'cardio-session-stats'},
+            React.createElement('div', null, s.minutes, 'min'),
+            React.createElement('div', null, s.distance, 'km'),
+            React.createElement('div', null, s.calories, ' kcal'))))) : null)));
+}
+
 /* ─── HISTORY VIEW ─── */
 function HistoryView({state}) {
   const [selectedDate, setSelectedDate] = useState(todayISO());
@@ -2350,7 +2415,8 @@ function App() {
       sessionLog: s.sessionLog || {},
       chatMessages: s.chatMessages || {},
       hydration: s.hydration || {},
-      trainingDiary: s.trainingDiary || {}
+      trainingDiary: s.trainingDiary || {},
+      cardioSessions: s.cardioSessions || {}
     };
   });
   const pendingRef = useRef(false);
@@ -2384,7 +2450,8 @@ function App() {
             sessionLog: mergeLog(remote.sessionLog || {}, s.sessionLog || {}),
             chatMessages: remote.chatMessages || s.chatMessages,
             hydration: {...(remote.hydration || {}), ...(s.hydration || {})},
-            trainingDiary: {...(remote.trainingDiary || {}), ...(s.trainingDiary || {})}
+            trainingDiary: {...(remote.trainingDiary || {}), ...(s.trainingDiary || {})},
+            cardioSessions: {...(remote.cardioSessions || {}), ...(s.cardioSessions || {})}
           };
           saveLocal(merged);
           return merged;
@@ -2616,6 +2683,15 @@ function App() {
       w[exKey] = {current: newWeight, history: hist};
       setToast(`✓ Progresión aceptada: ${newWeight} kg`);
       return {...s, weights: w};
+    });
+  }, []);
+  const addCardioSession = useCallback((athId, session) => {
+    setState(s => {
+      const cardio = {...(s.cardioSessions || {})};
+      if (!cardio[athId]) cardio[athId] = [];
+      cardio[athId] = [...cardio[athId], session];
+      setToast(`✓ Cardio registrado: ${session.minutes}min · ${session.calories} kcal`);
+      return {...s, cardioSessions: cardio};
     });
   }, []);
   const saveWeight = useCallback((key, weight) => {
@@ -3034,6 +3110,10 @@ function App() {
     icon: '📅',
     lbl: 'Historial'
   }, {
+    id: 'cardio',
+    icon: '🏃',
+    lbl: 'Cardio'
+  }, {
     id: 'hidratacion',
     icon: '💧',
     lbl: 'Hidratación'
@@ -3114,7 +3194,7 @@ function App() {
   }))) : /*#__PURE__*/React.createElement(CompareCol, {
     athId: state.athlete,
     section: "suplementos"
-  })), state.section === 'diario' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(TrainingDiaryView, {state: state, onDiarySave: saveDiary})), state.section === 'progresion' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(WeightProgressionView, {state: state, onAcceptProgression: acceptProgression})), state.section === 'historial' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(HistoryView, {state: state})), state.section === 'hidratacion' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(HydrationView, {state: state, onHydrationUpdate: updateHydration})), state.section === 'logros' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(AchievementsView, {state: state})), state.section === 'chat' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(ChatView, {state: state, onSendMessage: sendChatMessage})), state.section === 'progreso' && /*#__PURE__*/React.createElement(React.Fragment, null, state.athlete === 'both' && /*#__PURE__*/React.createElement(ProgressCompare, {
+  })), state.section === 'diario' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(TrainingDiaryView, {state: state, onDiarySave: saveDiary})), state.section === 'progresion' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(WeightProgressionView, {state: state, onAcceptProgression: acceptProgression})), state.section === 'historial' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(HistoryView, {state: state})), state.section === 'cardio' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(CardioView, {state: state, onCardioAdd: addCardioSession})), state.section === 'hidratacion' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(HydrationView, {state: state, onHydrationUpdate: updateHydration})), state.section === 'logros' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(AchievementsView, {state: state})), state.section === 'chat' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(ChatView, {state: state, onSendMessage: sendChatMessage})), state.section === 'progreso' && /*#__PURE__*/React.createElement(React.Fragment, null, state.athlete === 'both' && /*#__PURE__*/React.createElement(ProgressCompare, {
     state: state
   }), state.athlete === 'both' ? /*#__PURE__*/React.createElement("div", {
     className: "compare"
