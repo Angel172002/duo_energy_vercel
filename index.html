@@ -724,6 +724,25 @@ body{
 .duo-perfect-title{font-size:14px;font-weight:700;color:var(--cyan);margin-bottom:2px}
 .duo-perfect-subtitle{font-size:12px;color:var(--dim)}
 
+/* ===== HISTORY VIEW ===== */
+.history-controls{display:flex;gap:10px;margin-bottom:20px;align-items:center;flex-wrap:wrap}
+.history-nav{display:flex;gap:8px;align-items:center}
+.history-btn{width:36px;height:36px;border-radius:8px;background:var(--surface);border:1px solid var(--border);display:grid;place-items:center;font-size:16px;cursor:pointer;transition:all 0.2s}
+.history-btn:hover{border-color:var(--border2);background:var(--surface2)}
+.history-date-display{font-size:13px;font-weight:700;color:var(--text);min-width:140px;text-align:center}
+.history-date-picker{padding:8px 12px;border-radius:8px;background:var(--surface);border:1px solid var(--border);color:var(--text);font-size:12px;cursor:pointer;transition:all 0.2s}
+.history-date-picker:hover{border-color:var(--border2)}
+.history-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:16px;margin-bottom:14px}
+.history-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border)}
+.history-day{font-size:14px;font-weight:700}
+.history-date-small{font-size:11px;color:var(--faint);margin-top:2px}
+.history-status{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;background:rgba(75,242,242,0.15);border:1px solid rgba(75,242,242,0.3);border-radius:16px;font-size:11px;font-weight:700;color:var(--cyan)}
+.history-exercises{display:flex;flex-direction:column;gap:8px}
+.history-exercise-row{display:flex;justify-content:space-between;align-items:center;padding:10px;background:var(--surface2);border-radius:8px;border-left:3px solid var(--cyan)}
+.history-ex-name{font-size:13px;font-weight:600}
+.history-ex-stats{display:flex;gap:12px;font-family:var(--mono);font-size:11px;color:var(--faint)}
+.history-empty{text-align:center;padding:40px 20px;color:var(--faint);font-size:13px}
+
 /* ===== ACHIEVEMENTS ===== */
 .achievements-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px}
 .achievement-card{background:var(--surface);border:2px solid var(--border);border-radius:var(--r);padding:16px;text-align:center;transition:all 0.2s;position:relative;overflow:hidden}
@@ -2010,6 +2029,73 @@ function Toast({
   }, msg);
 }
 
+/* ─── HISTORY VIEW ─── */
+function HistoryView({state}) {
+  const [selectedDate, setSelectedDate] = useState(todayISO());
+  const athletes = state.athlete === 'both' ? ['sofia', 'angel'] : [state.athlete];
+
+  const goBack = () => {
+    const d = new Date(selectedDate);
+    d.setDate(d.getDate() - 1);
+    setSelectedDate(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`);
+  };
+
+  const goForward = () => {
+    const d = new Date(selectedDate);
+    d.setDate(d.getDate() + 1);
+    const today = todayISO();
+    const next = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    if (next <= today) setSelectedDate(next);
+  };
+
+  return React.createElement('div', null,
+    React.createElement('div', {className: 'history-controls'},
+      React.createElement('div', {className: 'history-nav'},
+        React.createElement('button', {className: 'history-btn', onClick: goBack}, '←'),
+        React.createElement('div', {className: 'history-date-display'}, selectedDate),
+        React.createElement('button', {className: 'history-btn', onClick: goForward, disabled: selectedDate === todayISO()}, '→')),
+      React.createElement('input', {
+        type: 'date',
+        className: 'history-date-picker',
+        value: selectedDate,
+        onChange: e => setSelectedDate(e.target.value),
+        max: todayISO()
+      })),
+    athletes.map(athId => {
+      const routine = ROUTINES[athId];
+      const a = ATHLETES[athId];
+      const date = new Date(selectedDate);
+      const dayName = DAYS[(date.getDay() + 6) % 7];
+      const day = routine.find(d => d.day === dayName);
+      const sessionLog = state.sessionLog?.[athId]?.[selectedDate];
+
+      return React.createElement('div', {key: athId, style: {marginBottom: 24}},
+        React.createElement('div', {className: 'history-card'},
+          React.createElement('div', {className: 'history-header'},
+            React.createElement('div', null,
+              React.createElement('div', {className: 'history-day'}, a.name),
+              React.createElement('div', {className: 'history-date-small'}, `${dayName} · ${selectedDate}`)),
+            sessionLog?.completedAll ? React.createElement('div', {className: 'history-status'}, '✓ Completado') : sessionLog ? React.createElement('div', {className: 'history-status', style: {background: 'rgba(255,139,139,0.1)', borderColor: 'rgba(255,139,139,0.3)', color: '#ff8b8b'}}, '⚠️ Parcial') : React.createElement('div', {className: 'history-status', style: {background: 'var(--surface2)', borderColor: 'var(--border)', color: 'var(--faint)'}}, '— Sin dato')),
+          !day || day.rest ? React.createElement('div', {className: 'history-empty'}, '📴 Día de descanso') :
+          React.createElement('div', {className: 'history-exercises'},
+            day.exercises.map((ex, i) => {
+              const key = `${athId}_${day.day}_${i}`;
+              const done = state.doneEx?.[key];
+              const weight = state.weights?.[key]?.current || parseWeight(ex.weight) || 0;
+              const note = state.notes?.[key];
+              return React.createElement('div', {key: i, className: 'history-exercise-row', style: {opacity: done ? 1 : 0.6}},
+                React.createElement('div', null,
+                  React.createElement('div', {className: 'history-ex-name'}, ex.name, done ? ' ✓' : ''),
+                  note && React.createElement('div', {style: {fontSize: '10px', color: 'var(--faint)', marginTop: '4px'}}, '📝 ' + note.text.slice(0, 40))),
+                React.createElement('div', {className: 'history-ex-stats'},
+                  React.createElement('span', null, `${ex.sets}×${ex.reps}`),
+                  React.createElement('span', null, `${weight}kg`),
+                  React.createElement('span', null, ex.rest)));
+            }))
+        ));
+    }));
+}
+
 /* ─── WEIGHT PROGRESSION DETECTOR ─── */
 function getProgressionCandidates(state, athId) {
   const today = new Date();
@@ -2944,6 +3030,10 @@ function App() {
     icon: '📈',
     lbl: 'Progresión'
   }, {
+    id: 'historial',
+    icon: '📅',
+    lbl: 'Historial'
+  }, {
     id: 'hidratacion',
     icon: '💧',
     lbl: 'Hidratación'
@@ -3024,7 +3114,7 @@ function App() {
   }))) : /*#__PURE__*/React.createElement(CompareCol, {
     athId: state.athlete,
     section: "suplementos"
-  })), state.section === 'diario' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(TrainingDiaryView, {state: state, onDiarySave: saveDiary})), state.section === 'progresion' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(WeightProgressionView, {state: state, onAcceptProgression: acceptProgression})), state.section === 'hidratacion' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(HydrationView, {state: state, onHydrationUpdate: updateHydration})), state.section === 'logros' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(AchievementsView, {state: state})), state.section === 'chat' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(ChatView, {state: state, onSendMessage: sendChatMessage})), state.section === 'progreso' && /*#__PURE__*/React.createElement(React.Fragment, null, state.athlete === 'both' && /*#__PURE__*/React.createElement(ProgressCompare, {
+  })), state.section === 'diario' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(TrainingDiaryView, {state: state, onDiarySave: saveDiary})), state.section === 'progresion' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(WeightProgressionView, {state: state, onAcceptProgression: acceptProgression})), state.section === 'historial' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(HistoryView, {state: state})), state.section === 'hidratacion' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(HydrationView, {state: state, onHydrationUpdate: updateHydration})), state.section === 'logros' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(AchievementsView, {state: state})), state.section === 'chat' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(ChatView, {state: state, onSendMessage: sendChatMessage})), state.section === 'progreso' && /*#__PURE__*/React.createElement(React.Fragment, null, state.athlete === 'both' && /*#__PURE__*/React.createElement(ProgressCompare, {
     state: state
   }), state.athlete === 'both' ? /*#__PURE__*/React.createElement("div", {
     className: "compare"
