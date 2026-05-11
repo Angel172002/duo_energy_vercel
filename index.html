@@ -195,13 +195,19 @@ body{
 .btn-secondary:hover{border-color:var(--border2);color:var(--text)}
 .modal-note{font-size:11px;color:var(--faint);margin-top:14px;padding:10px 12px;background:rgba(75,242,242,0.06);border:1px solid rgba(75,242,242,0.12);border-radius:var(--r);line-height:1.6}
 .modal-note strong{color:var(--cyan);font-weight:600}
+.modal-content{background:var(--deep);border:1px solid var(--border2);border-radius:var(--rl);padding:28px;max-width:400px;width:100%;box-shadow:0 30px 80px rgba(0,0,0,0.6)}
+.modal-content h3{font-size:18px;font-weight:700;margin-bottom:20px;color:var(--text)}
+.modal-btn{display:block;width:100%;padding:12px;border-radius:var(--r);background:linear-gradient(135deg,var(--purple),var(--indigo));color:#fff;font-weight:700;font-size:14px;border:none;cursor:pointer;margin-bottom:10px;transition:all 0.2s}
+.modal-btn:hover{filter:brightness(1.1);transform:translateY(-2px)}
+.modal-btn-cancel{display:block;width:100%;padding:12px;border-radius:var(--r);background:var(--surface);border:1px solid var(--border);color:var(--dim);font-weight:600;font-size:14px;cursor:pointer;transition:all 0.2s}
+.modal-btn-cancel:hover{border-color:var(--border2);color:var(--text)}
 
 /* ===== ATHLETE SWITCHER ===== */
 .athlete-switch{display:flex;background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:5px;gap:4px;backdrop-filter:blur(12px);margin-bottom:22px}
 .athlete-tab{flex:1;padding:13px 16px;border-radius:14px;display:flex;align-items:center;justify-content:center;gap:9px;font-weight:600;font-size:14px;color:var(--dim);transition:all 0.25s cubic-bezier(0.4,0,0.2,1);position:relative}
 .athlete-tab.active{color:#fff;background:linear-gradient(135deg,var(--a-color,var(--purple)),var(--a-accent,var(--cyan)));box-shadow:0 8px 28px rgba(0,0,0,0.3),inset 0 1px 0 rgba(255,255,255,0.2)}
 .athlete-tab.active.both{background:linear-gradient(135deg,var(--purple),var(--indigo),var(--cyan))}
-.avatar{width:25px;height:25px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,0.15);font-size:12px;font-weight:700}
+.avatar{width:25px;height:25px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,0.15);font-size:12px;font-weight:700;object-fit:cover}
 
 /* ===== SECTION TABS ===== */
 .section-tabs{display:flex;gap:8px;margin-bottom:22px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
@@ -1708,6 +1714,26 @@ function BodyWeightCard({athId, state, saveBodyWeight}){
     ) : React.createElement("div",{className:"bw-empty"}, history.length===1 ? "Registra al menos otro peso para ver tu evolución 📈" : "Sin datos aún. Registra tu primer peso arriba ⬆️")
   );
 }
+function AvatarModal({athId, onClose, onSave}) {
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      onSave(athId, evt.target.result);
+      onClose();
+    };
+    reader.readAsDataURL(file);
+  };
+  return React.createElement("div", {className: "modal-overlay"},
+    React.createElement("div", {className: "modal-content"},
+      React.createElement("h3", null, `📸 Cambiar avatar de ${athId === 'sofia' ? 'Sofía' : 'Ángel'}`),
+      React.createElement("input", {type: "file", accept: "image/*", onChange: handleFileChange, style: {display: "none"}, id: "avatar-input"}),
+      React.createElement("label", {htmlFor: "avatar-input", className: "modal-btn"}, "Seleccionar foto"),
+      React.createElement("button", {onClick: onClose, className: "modal-btn-cancel"}, "Cancelar")
+    )
+  );
+}
 function ProgressPhotosView({state, onPhotoAdd}) {
   const athId = state.athlete === 'both' ? 'sofia' : state.athlete;
   const photos = (state.progressPhotos || {})[athId] || [];
@@ -2589,6 +2615,8 @@ function App() {
   const [firebaseReady, setFirebaseReady] = useState(false);
   const [toast, setToast] = useState(null);
   const [celebration, setCelebration] = useState(null);
+  const [showAvatarModal, setShowAvatarModal] = useState(false);
+  const [selectedAthleteForAvatar, setSelectedAthleteForAvatar] = useState(null);
   const [state, setState] = useState(() => {
     const s = loadLocal();
     return {
@@ -2859,6 +2887,14 @@ function App() {
       if (text) diary[athId][today] = text;
       else delete diary[athId][today];
       return {...s, trainingDiary: diary};
+    });
+  }, []);
+  const setAthleteAvatar = useCallback((athId, photoData) => {
+    setState(s => {
+      const avatars = {...(s.athleteAvatars || {})};
+      avatars[athId] = photoData;
+      setToast(`✓ Avatar de ${athId === 'sofia' ? 'Sofía' : 'Ángel'} actualizado`);
+      return {...s, athleteAvatars: avatars};
     });
   }, []);
   const acceptProgression = useCallback((exKey, newWeight) => {
@@ -3218,7 +3254,11 @@ function App() {
             React.createElement("div",{className:"backup-btn-title"},"Borrar todos los datos"),
             React.createElement("div",{className:"backup-btn-sub"},"Reinicio total · acción irreversible")))),
       React.createElement("button",{className:"backup-close",onClick:()=>setShowBackup(false)},"Cerrar"))
-  ), React.createElement("div", {
+  ), showAvatarModal && selectedAthleteForAvatar && React.createElement(AvatarModal, {
+    athId: selectedAthleteForAvatar,
+    onClose: () => setShowAvatarModal(false),
+    onSave: setAthleteAvatar
+  }), React.createElement("div", {
     className: "app"
   }, /*#__PURE__*/React.createElement("header", {
     className: "header"
@@ -3292,9 +3332,32 @@ function App() {
     onClick: () => update({
       athlete: o.id
     })
-  }, /*#__PURE__*/React.createElement("span", {
+  }, state.athleteAvatars?.[o.id] ? /*#__PURE__*/React.createElement("img", {
+    src: state.athleteAvatars[o.id],
+    className: "avatar",
+    style: {background: 'none', fontSize: 0}
+  }) : /*#__PURE__*/React.createElement("span", {
     className: "avatar"
-  }, o.init), o.lbl))), /*#__PURE__*/React.createElement("div", {
+  }, o.init), o.lbl))), state.athlete !== 'both' && /*#__PURE__*/React.createElement("button", {
+    onClick: () => {
+      setSelectedAthleteForAvatar(state.athlete);
+      setShowAvatarModal(true);
+    },
+    style: {
+      padding: '8px 14px',
+      borderRadius: '12px',
+      background: 'rgba(75,242,242,0.1)',
+      border: '1px solid rgba(75,242,242,0.2)',
+      color: 'var(--cyan)',
+      fontSize: '12px',
+      fontWeight: '600',
+      cursor: 'pointer',
+      marginBottom: '14px',
+      transition: 'all 0.2s'
+    },
+    onMouseEnter: (e) => e.target.style.background = 'rgba(75,242,242,0.2)',
+    onMouseLeave: (e) => e.target.style.background = 'rgba(75,242,242,0.1)'
+  }, "📸 Cambiar avatar"), /*#__PURE__*/React.createElement("div", {
     className: "section-tabs"
   }, [{
     id: 'rutina',
