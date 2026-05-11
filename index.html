@@ -2584,8 +2584,13 @@ function HydrationView({state, onHydrationUpdate}) {
 
 /* ─── CHAT COMPONENT ─── */
 function ChatView({state, onSendMessage}) {
+  const normalizeMsgs = (raw) => {
+    if (Array.isArray(raw)) return raw;
+    if (raw && typeof raw === 'object') return Object.values(raw);
+    return [];
+  };
   const [msgInput, setMsgInput] = useState('');
-  const [messages, setMessages] = useState(state.chatMessages || []);
+  const [messages, setMessages] = useState(normalizeMsgs(state.chatMessages));
   const scrollRef = useRef(null);
   const emojis = ['❤️', '🔥', '💪', '👏', '🎉', '😄', '💯', '⚡', '🏆', '😍'];
 
@@ -2594,7 +2599,7 @@ function ChatView({state, onSendMessage}) {
   }, [messages]);
 
   useEffect(() => {
-    setMessages(state.chatMessages || []);
+    setMessages(normalizeMsgs(state.chatMessages));
   }, [state.chatMessages]);
 
   const send = (text) => {
@@ -2686,7 +2691,7 @@ function App() {
       theme: s.theme || 'dark',
       weights: s.weights || {},
       sessionLog: s.sessionLog || {},
-      chatMessages: s.chatMessages || {},
+      chatMessages: Array.isArray(s.chatMessages) ? s.chatMessages : [],
       hydration: s.hydration || {},
       trainingDiary: s.trainingDiary || {},
       cardioSessions: s.cardioSessions || {},
@@ -2776,12 +2781,15 @@ function App() {
     return out;
   }
   function mergeBodyWeight(remote, local) {
-    const out = {...remote};
-    Object.keys(local).forEach(athId => {
-      if (!out[athId]) { out[athId] = local[athId]; }
+    const toArr = (v) => Array.isArray(v) ? v : (v && typeof v === 'object' ? Object.values(v) : []);
+    const out = {};
+    Object.keys(remote || {}).forEach(k => { out[k] = toArr(remote[k]); });
+    Object.keys(local || {}).forEach(athId => {
+      const localArr = toArr(local[athId]);
+      if (!out[athId]) { out[athId] = localArr; }
       else {
-        const merged = [...(out[athId]||[])];
-        (local[athId]||[]).forEach(e => {
+        const merged = [...out[athId]];
+        localArr.forEach(e => {
           if (!merged.find(r => r.date === e.date)) merged.push(e);
         });
         merged.sort((a,b) => a.date.localeCompare(b.date));
