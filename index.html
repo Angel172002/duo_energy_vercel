@@ -631,6 +631,26 @@ body{
 .bar{width:100%;background:var(--purple);border-radius:6px 6px 0 0;min-height:4px;transition:background 0.2s}
 .bar-label{font-size:8px;color:var(--faint);font-weight:600;text-transform:uppercase}
 
+/* ===== PROGRESS PHOTOS ===== */
+.progress-photos-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px;margin-bottom:20px}
+.progress-photos-card h3{margin:0 0 16px;font-size:16px;font-weight:700;color:var(--text)}
+.photo-upload{margin-bottom:16px}
+.upload-btn{display:inline-block;padding:12px 18px;background:linear-gradient(135deg,var(--purple),var(--indigo));color:#fff;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;transition:all 0.2s;border:none}
+.upload-btn:hover{filter:brightness(1.1);transform:translateY(-2px)}
+.photo-nav{margin-bottom:16px}
+.month-select{width:100%;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;font-weight:600}
+.photo-gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:10px;margin-bottom:20px}
+.photo-thumb{aspect-ratio:1;border-radius:12px;overflow:hidden;border:2px solid var(--border);cursor:pointer;transition:all 0.2s}
+.photo-thumb:hover{border-color:var(--cyan);box-shadow:0 0 12px rgba(75,242,242,0.15)}
+.photo-thumb img{width:100%;height:100%;object-fit:cover}
+.before-after-slider{margin-top:20px;padding-top:20px;border-top:1px solid var(--border)}
+.slider-container{position:relative;width:100%;aspect-ratio:1;border-radius:12px;overflow:hidden;background:var(--surface2);margin-bottom:12px}
+.slider-img{width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0}
+.slider-img-overlay{position:absolute;top:0;left:0;height:100%;object-fit:cover;border-right:3px solid var(--cyan)}
+.slider-divider{position:absolute;top:0;height:100%;width:3px;background:var(--cyan);cursor:ew-resize;left:50%;transform:translateX(-50%);z-index:10}
+.slider-labels{display:flex;justify-content:space-between;padding:0 12px;font-size:12px;font-weight:600;color:var(--dim)}
+.photo-empty{padding:30px 20px;text-align:center;color:var(--faint);font-size:12px}
+
 /* ===== BACKUP MENU ===== */
 .backup-menu-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(6px);display:grid;place-items:center;z-index:1000;padding:14px;animation:fadeIn 0.25s ease}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
@@ -1686,6 +1706,61 @@ function BodyWeightCard({athId, state, saveBodyWeight}){
         React.createElement("span",null,`${history.length} registros`),
         React.createElement("span",null,history[history.length-1].date))
     ) : React.createElement("div",{className:"bw-empty"}, history.length===1 ? "Registra al menos otro peso para ver tu evolución 📈" : "Sin datos aún. Registra tu primer peso arriba ⬆️")
+  );
+}
+function ProgressPhotosView({state, onPhotoAdd}) {
+  const athId = state.athlete === 'both' ? 'sofia' : state.athlete;
+  const photos = (state.progressPhotos || {})[athId] || [];
+  const [selectedMonth, setSelectedMonth] = React.useState(todayISO().slice(0, 7));
+  const [sliderPos, setSliderPos] = React.useState(50);
+  const monthPhotos = photos.filter(p => p.date.startsWith(selectedMonth)).sort((a, b) => b.date.localeCompare(a.date));
+  const months = [...new Set(photos.map(p => p.date.slice(0, 7)))].sort().reverse();
+  const handleFileUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      onPhotoAdd(athId, {date: todayISO(), data: evt.target.result});
+      e.target.value = '';
+    };
+    reader.readAsDataURL(file);
+  };
+  const beforeAfter = monthPhotos.length >= 2 ? [monthPhotos[monthPhotos.length - 1], monthPhotos[0]] : null;
+  return React.createElement("div", {className: "progress-photos-card"},
+    React.createElement("h3", null, "📸 Fotos de Progreso"),
+    React.createElement("div", {className: "photo-upload"},
+      React.createElement("input", {type: "file", id: "photo-upload", accept: "image/*", onChange: handleFileUpload, style: {display: "none"}}),
+      React.createElement("label", {htmlFor: "photo-upload", className: "upload-btn"}, "📷 Subir Foto")
+    ),
+    months.length > 0 && React.createElement("div", {className: "photo-nav"},
+      React.createElement("select", {value: selectedMonth, onChange: (e) => setSelectedMonth(e.target.value), className: "month-select"},
+        months.map(m => React.createElement("option", {key: m, value: m}, new Date(m + '-01').toLocaleDateString('es-ES', {month: 'long', year: 'numeric'})))
+      )
+    ),
+    monthPhotos.length > 0 && React.createElement("div", {className: "photo-gallery"},
+      monthPhotos.map(p => React.createElement("div", {key: p.date, className: "photo-thumb"}, React.createElement("img", {src: p.data, alt: p.date})))
+    ),
+    beforeAfter && React.createElement("div", {className: "before-after-slider"},
+      React.createElement("div", {className: "slider-container"},
+        React.createElement("img", {src: beforeAfter[1].data, alt: "Before", className: "slider-img", style: {opacity: 1}}),
+        React.createElement("div", {className: "slider-divider", style: {left: `${sliderPos}%`}, onMouseDown: (e) => {
+          const move = (evt) => {
+            const rect = e.currentTarget.parentElement.getBoundingClientRect();
+            const newPos = Math.max(0, Math.min(100, ((evt.clientX - rect.left) / rect.width) * 100));
+            setSliderPos(newPos);
+          };
+          document.addEventListener('mousemove', move);
+          document.addEventListener('mouseup', () => document.removeEventListener('mousemove', move));
+        }},
+          React.createElement("img", {src: beforeAfter[0].data, alt: "After", className: "slider-img-overlay", style: {width: `${sliderPos}%`, overflow: 'hidden'}})
+        )
+      ),
+      React.createElement("div", {className: "slider-labels"},
+        React.createElement("span", null, "Antes"),
+        React.createElement("span", null, "Después")
+      )
+    ),
+    monthPhotos.length === 0 && React.createElement("div", {className: "photo-empty"}, "Sin fotos este mes. ¡Sube tu primera foto! 📸")
   );
 }
 function AdvancedStatsView({state}) {
@@ -2810,6 +2885,15 @@ function App() {
       return {...s, cardioSessions: cardio};
     });
   }, []);
+  const addProgressPhoto = useCallback((athId, photo) => {
+    setState(s => {
+      const photos = {...(s.progressPhotos || {})};
+      if (!photos[athId]) photos[athId] = [];
+      photos[athId] = [...photos[athId], photo];
+      setToast('✓ Foto de progreso subida');
+      return {...s, progressPhotos: photos};
+    });
+  }, []);
   const toggleSupplement = useCallback((athId, suppKey, checked) => {
     setState(s => {
       const today = todayISO();
@@ -3312,7 +3396,7 @@ function App() {
   }))) : /*#__PURE__*/React.createElement(CompareCol, {
     athId: state.athlete,
     section: "nutricion"
-  })), state.section === 'suplementos' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(SupplementsChecklist, {state: state, onToggleSupplement: toggleSupplement})), state.section === 'diario' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(TrainingDiaryView, {state: state, onDiarySave: saveDiary})), state.section === 'progresion' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(WeightProgressionView, {state: state, onAcceptProgression: acceptProgression})), state.section === 'historial' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(HistoryView, {state: state})), state.section === 'cardio' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(CardioView, {state: state, onCardioAdd: addCardioSession})), state.section === 'hidratacion' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(HydrationView, {state: state, onHydrationUpdate: updateHydration})), state.section === 'logros' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(AchievementsView, {state: state})), state.section === 'chat' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(ChatView, {state: state, onSendMessage: sendChatMessage})), state.section === 'progreso' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(AdvancedStatsView, {state: state}), state.athlete === 'both' && /*#__PURE__*/React.createElement(ProgressCompare, {
+  })), state.section === 'suplementos' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(SupplementsChecklist, {state: state, onToggleSupplement: toggleSupplement})), state.section === 'diario' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(TrainingDiaryView, {state: state, onDiarySave: saveDiary})), state.section === 'progresion' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(WeightProgressionView, {state: state, onAcceptProgression: acceptProgression})), state.section === 'historial' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(HistoryView, {state: state})), state.section === 'cardio' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(CardioView, {state: state, onCardioAdd: addCardioSession})), state.section === 'hidratacion' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(HydrationView, {state: state, onHydrationUpdate: updateHydration})), state.section === 'logros' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(AchievementsView, {state: state})), state.section === 'chat' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(ChatView, {state: state, onSendMessage: sendChatMessage})), state.section === 'progreso' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(AdvancedStatsView, {state: state}), /*#__PURE__*/React.createElement(ProgressPhotosView, {state: state, onPhotoAdd: addProgressPhoto}), state.athlete === 'both' && /*#__PURE__*/React.createElement(ProgressCompare, {
     state: state
   }), state.athlete === 'both' ? /*#__PURE__*/React.createElement("div", {
     className: "compare"
