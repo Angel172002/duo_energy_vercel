@@ -13,7 +13,9 @@
 
 <!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
 
 <!-- React + Babel -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
@@ -1247,15 +1249,31 @@ const {
   useEffect,
   useRef,
   useMemo,
-  useCallback
+  useCallback,
+  memo
 } = React;
+
+// Icono para notificaciones (chat, timer) — SVG inline para no depender de un asset externo
+const NOTIF_ICON = "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%238B3DD9' width='192' height='192' rx='32'/><text x='96' y='130' font-size='110' font-weight='bold' text-anchor='middle' fill='%234BF2F2' font-family='system-ui'>D</text></svg>";
 
 /* ─── Firebase helpers ─── */
 let db = null;
+let storage = null;
+let authReady = false;
 function initFirebase(cfg) {
   try {
     if (!firebase.apps.length) firebase.initializeApp(cfg);else firebase.app();
     db = firebase.database();
+    try { storage = firebase.storage(); } catch(e){ storage = null; }
+    // Auth anónima: requerida para que las Firebase Rules con auth != null funcionen.
+    // Hay que activar "Anonymous" en Firebase Console → Authentication → Sign-in method.
+    try {
+      firebase.auth().onAuthStateChanged(u => { authReady = !!u; });
+      firebase.auth().signInAnonymously().catch(err => {
+        // Si auth anónimo no está habilitado, el sync seguirá si las rules son public; si no, fallará silenciosamente.
+        console.warn('Auth anónimo no disponible (revisa Firebase Console → Authentication):', err?.code || err);
+      });
+    } catch(e){ console.warn('Firebase Auth no inicializado', e); }
     return true;
   } catch (e) {
     console.error(e);
@@ -1264,6 +1282,37 @@ function initFirebase(cfg) {
 }
 function fbSet(path, val) {
   if (db) db.ref(path).set(val);
+}
+// Subida a Firebase Storage; recibe dataURL base64 → devuelve URL pública. Fallback: devuelve el dataURL si Storage no disponible.
+async function uploadDataURL(path, dataURL) {
+  if (!storage) return dataURL;
+  try {
+    const ref = storage.ref(path);
+    const snap = await ref.putString(dataURL, 'data_url');
+    return await snap.ref.getDownloadURL();
+  } catch (e) {
+    console.warn('uploadDataURL falló, conservando dataURL local:', e?.code || e?.message);
+    return dataURL;
+  }
+}
+// Comprime una imagen dataURL antes de subirla. Reduce dimensiones máximas y re-encode a JPEG calidad media.
+function compressDataURL(dataURL, maxSize = 1280, quality = 0.82) {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => {
+      let { width, height } = img;
+      if (width > maxSize || height > maxSize) {
+        if (width > height) { height = Math.round(height * maxSize / width); width = maxSize; }
+        else { width = Math.round(width * maxSize / height); height = maxSize; }
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = width; canvas.height = height;
+      canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+      try { resolve(canvas.toDataURL('image/jpeg', quality)); } catch (e) { resolve(dataURL); }
+    };
+    img.onerror = () => resolve(dataURL);
+    img.src = dataURL;
+  });
 }
 function fbOn(path, cb) {
   if (db) {
@@ -1398,7 +1447,7 @@ function WeightPill({
     defWeight: parseWeight(display)
   })));
 }
-function SparkLine({
+const SparkLine = memo(function SparkLine({
   history,
   defWeight
 }) {
@@ -1453,7 +1502,7 @@ function SparkLine({
       className: `hist-delta ${delta > 0 ? 'up' : 'dn'}`
     }, delta > 0 ? '+' : '', delta.toFixed(1)));
   })));
-}
+});
 
 /* ─── Skip reasons ─── */
 const SKIP_REASONS = ['Dolor / lesión','Sin tiempo','Fatiga','Viaje','Equipo no disponible','Otro'];
@@ -1569,7 +1618,7 @@ function DayCard({day,athId,state,toggleEx,saveWeight,toggleSkip,saveNote}) {
 }
 
 /* ─── Macro Ring ─── */
-function MacroRing({
+const MacroRing = memo(function MacroRing({
   p,
   c,
   f,
@@ -1638,7 +1687,7 @@ function MacroRing({
     fill: "#4BF2F2",
     letterSpacing: "2"
   }, "KCAL"));
-}
+});
 
 /* ─── Progress ─── */
 function calcStats(state, athId) {
@@ -1713,7 +1762,7 @@ function calcStats(state, athId) {
     log
   };
 }
-function HeatMap({
+const HeatMap = memo(function HeatMap({
   log
 }) {
   const today = new Date();
@@ -1774,7 +1823,7 @@ function HeatMap({
       React.createElement("div", {className:"heatmap-legend-cell l2"}),
       React.createElement("div", {className:"heatmap-legend-cell l3"})),
     React.createElement("span", null, "Más")));
-}
+});
 /* ─── BodyWeightCard ─── */
 function BodyWeightCard({athId, state, saveBodyWeight}){
   const a = ATHLETES[athId];
@@ -3208,6 +3257,27 @@ function App() {
         setState(s => ({...s, chatMessages: remote}));
       }
     });
+    // Avatars y progress photos: URLs livianas (apuntan a Firebase Storage). Pisa local.
+    fbOn('duo_avatars', remote => {
+      if (remote && typeof remote === 'object') setState(s => ({...s, athleteAvatars: {...(s.athleteAvatars || {}), ...remote}}));
+    });
+    fbOn('duo_progress_photos', remote => {
+      if (remote && typeof remote === 'object') {
+        const toArr = (v) => Array.isArray(v) ? v : Object.values(v || {});
+        const norm = {};
+        Object.keys(remote).forEach(k => { norm[k] = toArr(remote[k]); });
+        setState(s => {
+          const merged = {...(s.progressPhotos || {})};
+          Object.keys(norm).forEach(athId => {
+            const existing = merged[athId] || [];
+            const byTs = new Map(existing.map(p => [p.ts || p.date, p]));
+            norm[athId].forEach(p => { byTs.set(p.ts || p.date, p); });
+            merged[athId] = [...byTs.values()].sort((a, b) => (a.ts || 0) - (b.ts || 0));
+          });
+          return {...s, progressPhotos: merged};
+        });
+      }
+    });
     return off;
   }
   function mergeWeights(remote, local) {
@@ -3218,11 +3288,19 @@ function App() {
       if (!remote[k]) out[k] = local[k];else {
         const rh = remote[k].history || [];
         const lh = local[k].history || [];
-        const merged = [...rh];
+        // Indexar por fecha. Si ambos lados tienen una entrada del mismo día,
+        // gana la que tenga timestamp `ts` mayor (escrita más reciente).
+        // Si una no tiene ts, asumimos que local (sesión actual del usuario) es más nueva.
+        const byDate = {};
+        rh.forEach(e => { if (e && e.date) byDate[e.date] = e; });
         lh.forEach(e => {
-          if (!merged.find(r => r.date === e.date)) merged.push(e);
+          if (!e || !e.date) return;
+          const r = byDate[e.date];
+          if (!r) { byDate[e.date] = e; return; }
+          const rTs = r.ts || 0, lTs = e.ts || Date.now();
+          if (lTs >= rTs) byDate[e.date] = e;
         });
-        merged.sort((a, b) => a.date.localeCompare(b.date));
+        const merged = Object.values(byDate).sort((a, b) => a.date.localeCompare(b.date));
         out[k] = {
           current: merged.length ? merged[merged.length - 1].weight : null,
           history: merged
@@ -3477,14 +3555,19 @@ function App() {
       return {...s, trainingDiary: diary};
     });
   }, []);
-  const setAthleteAvatar = useCallback((athId, photoData) => {
+  const setAthleteAvatar = useCallback(async (athId, photoData) => {
+    setToast('Subiendo avatar...');
+    const compressed = await compressDataURL(photoData, 512, 0.82);
+    const url = await uploadDataURL(`avatars/${athId}.jpg`, compressed);
     setState(s => {
       const avatars = {...(s.athleteAvatars || {})};
-      avatars[athId] = photoData;
+      avatars[athId] = url;
+      // Sincronizamos avatars a Firebase ahora que son URLs (peso despreciable).
+      if (firebaseReady && db) fbSet('duo_avatars', avatars);
       setToast(`✓ Avatar de ${athId === 'sofia' ? 'Sofía' : 'Ángel'} actualizado`);
       return {...s, athleteAvatars: avatars};
     });
-  }, []);
+  }, [firebaseReady]);
   const acceptProgression = useCallback((exKey, newWeight) => {
     setState(s => {
       const w = {...(s.weights || {})};
@@ -3509,15 +3592,21 @@ function App() {
       return {...s, cardioSessions: cardio};
     });
   }, []);
-  const addProgressPhoto = useCallback((athId, photo) => {
+  const addProgressPhoto = useCallback(async (athId, photo) => {
+    setToast('Subiendo foto...');
+    const compressed = await compressDataURL(photo.data || photo, 1280, 0.82);
+    const ts = Date.now();
+    const url = await uploadDataURL(`progress/${athId}/${ts}.jpg`, compressed);
+    const stored = { date: photo.date || todayISO(), data: url, ts };
     setState(s => {
       const photos = {...(s.progressPhotos || {})};
       if (!photos[athId]) photos[athId] = [];
-      photos[athId] = [...photos[athId], photo];
+      photos[athId] = [...photos[athId], stored];
+      if (firebaseReady && db) fbSet('duo_progress_photos', photos);
       setToast('✓ Foto de progreso subida');
       return {...s, progressPhotos: photos};
     });
-  }, []);
+  }, [firebaseReady]);
   const toggleSupplement = useCallback((athId, suppKey, checked) => {
     setState(s => {
       const today = todayISO();
@@ -3551,12 +3640,15 @@ function App() {
         setPRCelebration({exName, weight, prev: prevMax, athId});
         setTimeout(() => setPRCelebration(null), 3800);
       }
+      const ts = Date.now();
       if (hist.length && hist[hist.length - 1].date === today) hist[hist.length - 1] = {
         date: today,
-        weight
+        weight,
+        ts
       };else hist.push({
         date: today,
-        weight
+        weight,
+        ts
       });
       w[key] = {
         current: weight,
@@ -3673,7 +3765,7 @@ function App() {
       if (lastMsg && lastMsg.from !== state.athlete) {
         setHasUnreadChat(true);
         if ('Notification' in window && Notification.permission === 'granted') {
-          try { new Notification(`💬 ${lastMsg.from === 'sofia' ? 'Sofía' : 'Ángel'}`, {body: lastMsg.text, icon:'/manifest.json', tag:'duo-chat'}); } catch(e){}
+          try { new Notification(`💬 ${lastMsg.from === 'sofia' ? 'Sofía' : 'Ángel'}`, {body: lastMsg.text, icon: NOTIF_ICON, tag:'duo-chat'}); } catch(e){}
         }
       }
     }
@@ -3699,7 +3791,7 @@ function App() {
       try{ if(navigator.vibrate) navigator.vibrate([100,50,100,50,100]); }catch(e){}
       try {
         if ('Notification' in window && Notification.permission === 'granted' && document.hidden) {
-          new Notification('⏱ Descanso terminado', {body: autoTimer.name + ' — ¡a la siguiente serie!', tag:'duo-timer'});
+          new Notification('⏱ Descanso terminado', {body: autoTimer.name + ' — ¡a la siguiente serie!', icon: NOTIF_ICON, tag:'duo-timer'});
         }
       } catch(e){}
       setAutoTimer(t => t ? {...t, running:false, remaining:0} : null);

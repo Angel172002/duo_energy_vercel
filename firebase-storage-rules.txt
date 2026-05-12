@@ -1,0 +1,19 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Avatars y fotos de progreso: requieren auth (anónimo cuenta).
+    // Lectura abierta a auth; escritura limitada a archivos <= 5 MB image/*.
+    match /avatars/{file} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null
+                    && request.resource.size < 5 * 1024 * 1024
+                    && request.resource.contentType.matches('image/.*');
+    }
+    match /progress/{athId}/{file} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null
+                    && request.resource.size < 5 * 1024 * 1024
+                    && request.resource.contentType.matches('image/.*');
+    }
+  }
+}

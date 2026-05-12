@@ -1,0 +1,30 @@
+{
+  "rules": {
+    ".read": "auth != null",
+    ".write": "auth != null",
+    "duo_state": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    "duo_chat": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      ".validate": "newData.exists()"
+    },
+    "duo_avatars": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    "duo_progress_photos": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    "duo_live": {
+      ".read": "auth != null",
+      "$athId": {
+        ".write": "auth != null",
+        ".validate": "newData.hasChildren(['currentEx','set','total','lastUpdate']) || newData.val() == null"
+      }
+    }
+  }
+}
