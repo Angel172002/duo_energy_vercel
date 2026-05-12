@@ -1,6 +1,6 @@
 // Bump CACHE_NAME en cada deploy si quieres forzar refresco de assets cacheados.
 // network-first para HTML evita que deploys queden atrapados en cache viejo.
-const CACHE_NAME = 'duo-energy-v2-2026-05-12';
+const CACHE_NAME = 'duo-energy-v3-2026-05-12';
 const PRECACHE_URLS = ['/manifest.json'];
 
 self.addEventListener('install', event => {
@@ -41,11 +41,9 @@ self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
   const url = new URL(event.request.url);
 
-  // Firebase / Google CDNs: siempre red, sin cache
-  if (url.hostname.includes('firebase') || url.hostname.includes('gstatic.com') || url.hostname.includes('googleapis.com')) {
-    event.respondWith(fetch(event.request).catch(() => caches.match(event.request)));
-    return;
-  }
+  // Cross-origin (Firebase, gstatic, cdnjs, fonts.google, etc.): no interceptar.
+  // El navegador los maneja directo y CSP los evalúa solo una vez.
+  if (url.origin !== self.location.origin) return;
 
   // HTML (incluido index.html y navegaciones SPA): network-first → fallback cache → fallback offline
   if (isHTMLRequest(event.request)) {
