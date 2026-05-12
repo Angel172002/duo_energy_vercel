@@ -3188,10 +3188,13 @@ function App() {
             weights: mergeWeights(remote.weights || {}, s.weights || {}),
             sessionLog: mergeLog(remote.sessionLog || {}, s.sessionLog || {}),
             chatMessages: remote.chatMessages || s.chatMessages,
-            hydration: {...(remote.hydration || {}), ...(s.hydration || {})},
-            trainingDiary: {...(remote.trainingDiary || {}), ...(s.trainingDiary || {})},
-            cardioSessions: {...(remote.cardioSessions || {}), ...(s.cardioSessions || {})},
-            supplementStatus: {...(remote.supplementStatus || {}), ...(s.supplementStatus || {})}
+            hydration: mergeNestedByDate(remote.hydration || {}, s.hydration || {}),
+            trainingDiary: mergeNestedByDate(remote.trainingDiary || {}, s.trainingDiary || {}),
+            cardioSessions: mergeCardio(remote.cardioSessions || {}, s.cardioSessions || {}),
+            supplementStatus: mergeSupplements(remote.supplementStatus || {}, s.supplementStatus || {}),
+            bodyMeasures: mergeBodyMeasures(remote.bodyMeasures || {}, s.bodyMeasures || {}),
+            cycle: {...(remote.cycle || {}), ...(s.cycle || {})},
+            dailyRatings: mergeSupplements(remote.dailyRatings || {}, s.dailyRatings || {})
           };
           saveLocal(merged);
           return merged;
@@ -3240,6 +3243,59 @@ function App() {
     });
     return out;
   }
+  // Generic: { athId: { 'YYYY-MM-DD': value } } — local sobrescribe por fecha (intención del usuario en sesión actual)
+  function mergeNestedByDate(remote, local) {
+    const out = {};
+    Object.keys(remote || {}).forEach(athId => { out[athId] = {...(remote[athId] || {})}; });
+    Object.keys(local || {}).forEach(athId => {
+      out[athId] = {...(out[athId] || {}), ...(local[athId] || {})};
+    });
+    return out;
+  }
+  // Cardio: { athId: [sessions] } — unión por (date, minutes, calories)
+  function mergeCardio(remote, local) {
+    const toArr = (v) => Array.isArray(v) ? v : (v && typeof v === 'object' ? Object.values(v) : []);
+    const out = {};
+    const keys = new Set([...Object.keys(remote || {}), ...Object.keys(local || {})]);
+    keys.forEach(athId => {
+      const r = toArr(remote[athId]);
+      const l = toArr(local[athId]);
+      const merged = [...r];
+      l.forEach(s => {
+        const sig = `${s.date}_${s.minutes}_${s.calories}_${s.type || ''}`;
+        if (!merged.find(m => `${m.date}_${m.minutes}_${m.calories}_${m.type || ''}` === sig)) merged.push(s);
+      });
+      out[athId] = merged;
+    });
+    return out;
+  }
+  // Suplementos / ratings: { athId: { 'YYYY-MM-DD': { key: val } } } — merge profundo, local gana en colisión
+  function mergeSupplements(remote, local) {
+    const out = {};
+    const aths = new Set([...Object.keys(remote || {}), ...Object.keys(local || {})]);
+    aths.forEach(a => {
+      out[a] = {};
+      const r = remote[a] || {}, l = local[a] || {};
+      const dates = new Set([...Object.keys(r), ...Object.keys(l)]);
+      dates.forEach(d => { out[a][d] = {...(r[d] || {}), ...(l[d] || {})}; });
+    });
+    return out;
+  }
+  // bodyMeasures: { athId: [{date, ...}] }
+  function mergeBodyMeasures(remote, local) {
+    const toArr = (v) => Array.isArray(v) ? v : (v && typeof v === 'object' ? Object.values(v) : []);
+    const out = {};
+    const keys = new Set([...Object.keys(remote || {}), ...Object.keys(local || {})]);
+    keys.forEach(athId => {
+      const r = toArr(remote[athId]);
+      const l = toArr(local[athId]);
+      const byDate = {};
+      r.forEach(e => { if (e && e.date) byDate[e.date] = e; });
+      l.forEach(e => { if (e && e.date) byDate[e.date] = {...(byDate[e.date] || {}), ...e}; });
+      out[athId] = Object.values(byDate).sort((a, b) => a.date.localeCompare(b.date));
+    });
+    return out;
+  }
   function mergeBodyWeight(remote, local) {
     const toArr = (v) => Array.isArray(v) ? v : (v && typeof v === 'object' ? Object.values(v) : []);
     const out = {};
@@ -3269,14 +3325,22 @@ function App() {
       setSyncStatus('online');
       return;
     }
-    // Build the payload to push
+    // Build the payload to push (sync simétrico: enviamos todo lo que también recibimos)
+    // NOTA: progressPhotos y athleteAvatars NO se incluyen — base64 dataURL puede saturar Firebase RTDB (~10 MB/nodo). Pendiente migración a Firebase Storage.
     const payload = {
       doneEx: state.doneEx || {},
       skippedEx: state.skippedEx || {},
       notes: state.notes || {},
       bodyWeight: state.bodyWeight || {},
       weights: state.weights || {},
-      sessionLog: state.sessionLog || {}
+      sessionLog: state.sessionLog || {},
+      hydration: state.hydration || {},
+      trainingDiary: state.trainingDiary || {},
+      cardioSessions: state.cardioSessions || {},
+      supplementStatus: state.supplementStatus || {},
+      bodyMeasures: state.bodyMeasures || {},
+      cycle: state.cycle || {},
+      dailyRatings: state.dailyRatings || {}
     };
     // Skip if payload is identical to last pushed (deep compare via JSON)
     const serialized = JSON.stringify(payload);
@@ -3299,7 +3363,7 @@ function App() {
       }
     }, 800);
     return () => clearTimeout(t);
-  }, [state.doneEx, state.skippedEx, state.notes, state.bodyWeight, state.weights, state.sessionLog, firebaseReady]);
+  }, [state.doneEx, state.skippedEx, state.notes, state.bodyWeight, state.weights, state.sessionLog, state.hydration, state.trainingDiary, state.cardioSessions, state.supplementStatus, state.bodyMeasures, state.cycle, state.dailyRatings, firebaseReady]);
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', state.theme);
   }, [state.theme]);
@@ -3862,7 +3926,12 @@ function App() {
       className: "day-num"
     }, d.day.slice(0, 3).toUpperCase()))));
   }
-  return React.createElement(React.Fragment, null, toast && React.createElement(Toast, {
+  return React.createElement(React.Fragment, null,
+    showFbConfig && React.createElement(FirebaseModal, {
+      onConnect: () => { setShowFbConfig(false); connectFirebase(); setToast('✓ Firebase conectado'); },
+      onSkip: () => { setShowFbConfig(false); setToast('Modo offline · datos en este dispositivo'); }
+    }),
+    toast && React.createElement(Toast, {
     msg: toast,
     onDone: () => setToast(null)
   }), autoTimer && React.createElement("div", {className:`auto-timer${autoTimer.remaining<=0?' done':''}`},
@@ -4145,10 +4214,29 @@ showMoreSheet && React.createElement(MoreSheet, {active: state.section, onChange
 }
 ReactDOM.createRoot(document.getElementById('root')).render(/*#__PURE__*/React.createElement(App, null));
 
-// Register Service Worker for PWA
+// Register Service Worker for PWA — detecta nueva versión y la activa sin esperar
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/sw.js').then(reg => {
     console.log('SW registered:', reg);
+    // Si ya hay un SW esperando, actívalo ahora
+    if (reg.waiting) reg.waiting.postMessage({type:'SKIP_WAITING'});
+    reg.addEventListener('updatefound', () => {
+      const newSW = reg.installing;
+      if (!newSW) return;
+      newSW.addEventListener('statechange', () => {
+        if (newSW.state === 'installed' && navigator.serviceWorker.controller) {
+          // Nueva versión lista, activar
+          newSW.postMessage({type:'SKIP_WAITING'});
+        }
+      });
+    });
+    // Cuando el SW activo cambia, recargar UNA vez para usar la versión nueva
+    let reloaded = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (reloaded) return;
+      reloaded = true;
+      window.location.reload();
+    });
   }).catch(err => console.log('SW registration failed:', err));
 }
 </script>
